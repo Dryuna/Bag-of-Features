@@ -5,15 +5,22 @@
 	Histogram class
 
 ************************************************************/
+#ifndef IMGFEATURES_H
+#define IMGFEATURES_H
+
 #include <fstream>
 #include <iostream>
 #include <cv.h>
 #include <cxcore.h>
 #include <highgui.h>
 
-#include "parameters.h"
-
 using namespace std;
+
+class Dictionary;
+class ImageFeatures;
+class HistogramFeatures;
+class ObjectSet;
+
 
 class ImageFeatures
 {
@@ -35,14 +42,16 @@ class ImageFeatures
         //Check to see if the descriptor was allocated
         bool checkAlloc();
 
-        void extractSIFT_CV(const cv::Mat& img, double p1, double p2);
+        void extractSIFT_CV(char* imgName,
+                            double p1,
+                            double p2,
+                            bool output);
 
         // Copy the values in
-        void copyDescriptors(const float** input, int count, int len);
-        bool copyDescriptorAt(const float* vector, int location);
+        void copyDescriptors(const double** input, int count, int len);
         bool copyDescriptorAt(const double* vector, int location);
 
-        float** descriptors;
+        double** descriptors;
         int size;
         int length;
 
@@ -56,17 +65,19 @@ class HistogramFeatures
         HistogramFeatures();
         HistogramFeatures(int n, int l);
 
-        bool alloc(int n, int l);
-        bool dealloc();
+        void alloc(int n, int l);
+        void dealloc();
 
         float getValAt(int i);
         bool addToBin(int i);
+
+        void buildBoF(const ImageFeatures img, Dictionary d, int s, int l);
         // Normalize the bins in the histogram from 0 to 1
         void normalizeHist();
 
         int bins;
-        float label;
-        float *histogram;
+        double label;
+        double *histogram;
 };
 
 class ObjectSet
@@ -86,3 +97,33 @@ class ObjectSet
         int featureCount;
 };
 
+class Dictionary
+{
+    public:
+        Dictionary();
+        Dictionary(int n, int m);
+        ~Dictionary();
+
+        void dealloc();
+        void alloc(int n, int m);
+
+        // C-Clustering lib kCluster function
+        void buildKClustering(ObjectSet* obj,
+                            int numClasses,
+                            int numFeatures,
+                            int featureLength,
+                            int numClusters,
+                            int pass,
+                            char method,
+                            char dist);
+        void calcCentroid();
+        int matchFeature(const double *feature);
+
+        double** dictionary;
+        double* centroid;
+        int size;
+        int length;
+};
+
+
+#endif

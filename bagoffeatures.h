@@ -21,25 +21,6 @@ extern "C"
 
 
 IplImage* preProcessImages(const IplImage* input, int minSize, int maxSize);
-void copySIFTPts(ImageFeatures &dst, feature* src, const int size, const int length);
-void copySURFPts(ImageFeatures &dst, const IpVec src, const int length);
-int getSIFT(char* fileName, ImageFeatures &dst,
-            int lvls, double sigma, double thresh1, int thresh2,
-            int dbl, int width, int bins, int sizeMin, int sizeMax);
-int getSIFT(IplImage* input, ImageFeatures &dst, int lvls,
-            double sigma, double thresh1, int thresh2,
-            int dbl, int width, int bins, int sizeMin, int sizeMax);
-int getSURF(char* fileName, ImageFeatures &dst, bool invariant,
-            int octaves, int intervals, int step, float thresh,
-            int sizeMin, int sizeMax);
-int getSURF(IplImage* input, ImageFeatures &dst, bool invariant,
-            int octaves, int intervals, int step, float thresh,
-            int sizeMin, int sizeMax);
-void getHistogram(ImageFeatures src, HistogramFeatures &dst,
-                  CvMat* dict, int len, bool normalize);
-int findDictionaryMatch(float* descriptor, CvMat* dict, int length);
-
-
 
 class BagOfFeatures
 {
@@ -55,7 +36,7 @@ class BagOfFeatures
         {
             return numFeatures;
         };
-
+/*
         // Feature Extraction
         // Using SIFT Features
         bool extractSIFTFeatures(int lvls,
@@ -98,7 +79,7 @@ class BagOfFeatures
 
         // Building the Histograms
         bool buildBofHistograms(bool normalize);
-
+*/
         void filterDictionary(double R);
 
         // Training the BoF
@@ -124,6 +105,9 @@ class BagOfFeatures
 
         float predictClassification(ImageFeatures input, bool normalize);
 
+        void process();
+
+
     private:
         //Data
         ObjectSet *testObject;
@@ -139,7 +123,8 @@ class BagOfFeatures
         Node* hTree;
 
         //Visual Dictionary
-        CvMat* dictionary;
+        //CvMat* dictionary;
+        Dictionary codex;
 
         //Classifiers
         int classifierType;

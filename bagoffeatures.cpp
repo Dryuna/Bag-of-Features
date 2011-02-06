@@ -21,8 +21,6 @@ BagOfFeatures::BagOfFeatures()
     testObject = NULL;
     validObject = NULL;
     trainObject = NULL;
-    data = NULL;
-    dictionary = NULL;
     SVMModel = NULL;
     classifierType = -1;
     //SVMModel_CV = NULL;
@@ -36,7 +34,6 @@ BagOfFeatures::BagOfFeatures(const int n, DataSet* val)
     numClasses = n;
     numFeatures = 0;
     descrSize = 0;
-    dictionary = NULL;
     SVMModel = NULL;
     //SVMModel_CV = NULL;
     //NBModel_CV = NULL;
@@ -74,7 +71,7 @@ BagOfFeatures::~BagOfFeatures()
     //SVMModel_CV.clear();
     //NBModel_CV.clear();
 }
-
+/*
 void BagOfFeatures::allocBoF(const int n, DataSet* val)
 {
     int i;
@@ -369,7 +366,6 @@ bool BagOfFeatures::cutHierarchicalTree(int numClusters)
 	{
         ptrCenter = (float *)(dictionary->data.ptr + i * dictionary->step);
         //cout << i << " \t\t\t" << indexCount[i] << endl << endl;
-        float t = indexCount[i];
         for(j = 0; j < descrSize; j++)
         {
             ptrCenter[j] /= (float)indexCount[i];
@@ -412,7 +408,6 @@ bool BagOfFeatures::cutHierarchicalTree(int numClusters)
             cout << "PROBLEM DURING CLUSTERING" << endl;
     }
     delete [] checkData;
-*/
 
     delete [] clusterID;
 	delete [] indexCount;
@@ -640,7 +635,6 @@ bool BagOfFeatures::buildKClustering(int numClusters, int pass, char method, cha
 	{
         ptrCenter = (float *)(dictionary->data.ptr + i * dictionary->step);
         //cout << i << " \t\t\t" << indexCount[i] << endl << endl;
-        float t = indexCount[i];
         for(j = 0; j < descrSize; j++)
         {
             ptrCenter[j] /= (float)indexCount[i];
@@ -1121,7 +1115,7 @@ float* BagOfFeatures::resultsTraining()
 
     return results;
 }
-*/
+
 
 float* BagOfFeatures::resultsTraining()
 {
@@ -1278,7 +1272,7 @@ float BagOfFeatures::predictClassification(ImageFeatures input, bool normalize)
     float classification;
     HistogramFeatures bof(dictionary->rows, -1);
     //Build the bag of feature
-    getHistogram(input, bof, dictionary, descrSize, normalize);
+    //getHistogram(input, bof, dictionary, descrSize, normalize);
     //Classify
     if(classifierType == LIBSVM_CLASSIFIER)
     {
@@ -1445,7 +1439,7 @@ float* BagOfFeatures::resultsTest()
 
     return results;
 }
-*/
+
 
 
 void copySIFTPts(ImageFeatures &dst, feature* src, const int size, const int length)
@@ -1560,7 +1554,7 @@ void copySURFPts(ImageFeatures &dst, const IpVec src, const int length)
         //for(j = 0; j < length; j++)
         //    temp.descriptor[j] *= mag;
 		// Copy each descriptor into the ImageFeature
-		dst.copyDescriptorAt(temp.descriptor, i);
+		//dst.copyDescriptorAt(temp.descriptor, i);
 
 	}
 }
@@ -1585,7 +1579,7 @@ int getSURF(char* fileName, ImageFeatures &dst, bool invariant,
     surfDetDes(resized, temp, invariant, octaves, intervals, step, thresh);
 
     cout << "OpenSURF found: " << temp.size() << " interest points" << endl;
-    /*
+
     drawIpoints(resized, temp, 3);
 
     IplImage* display = cvCreateImage(cvSize(resized->width*4, resized->height*4), resized->depth, resized->nChannels);
@@ -1593,7 +1587,7 @@ int getSURF(char* fileName, ImageFeatures &dst, bool invariant,
     cvShowImage("Extracted SURF", display);
     cvWaitKey(150);
     cvReleaseImage(&display);
-    */
+
     // Copy the SURF feature into the feature object
     copySURFPts(dst, temp, 64);
 
@@ -1619,14 +1613,14 @@ int getSURF(IplImage* input, ImageFeatures &dst, bool invariant,
     // Detect the SURF features
     surfDetDes(resized, temp, invariant, octaves, intervals, step, thresh);
     //cout << "Extracted " << temp.size() << " features..." << endl;
-    /*
+
     drawIpoints(resized, temp, 3);
     IplImage* display = cvCreateImage(cvSize(resized->width*4, resized->height*4), resized->depth, resized->nChannels);
     cvResize(resized, display, CV_INTER_CUBIC);
     cvShowImage("Extracted SURF", display);
     cvWaitKey(60);
     cvReleaseImage(&display);
-    */
+
     // Copy the SURF feature into the feature object
     copySURFPts(dst, temp, 64);
     cvReleaseImage(&dataGray);
@@ -1692,7 +1686,7 @@ int findDictionaryMatch(float* descriptor, CvMat* dict, int length)
             tempDistance += (ptr2[k] - ptr1[k])*(ptr2[k] - ptr1[k]);
         }
         // calculate the euclidean distance
-        tempDistance /= (double)length; //sqrt(tempDistance);*/
+        tempDistance /= (double)length; //sqrt(tempDistance);
 
         if(tempDistance < minDistance)
         {
@@ -1740,3 +1734,49 @@ IplImage* preProcessImages(const IplImage* input, int minSize, int maxSize)
 
     return output;
 }
+*/
+
+void BagOfFeatures::process()
+{
+    int i, j;
+    int train, valid, test, label;
+    numFeatures = 0;
+    descrSize = 128;
+    //First extracting the features
+    for(i = 0; i < numClasses; ++i)
+    {
+        data[i].getDataInfo(train, valid, test, label);
+        for(j = 0; j < train; ++j)
+        {
+            trainObject[i].featureSet[j].extractSIFT_CV(
+                            data[i].getDataList(j),
+                            0.05, 15.0, true);
+            numFeatures += trainObject[i].featureSet[j].size;
+        }
+        for(j = 0; j < valid; ++j)
+        {
+            validObject[i].featureSet[j].extractSIFT_CV(
+                            data[i].getDataList(j),
+                            0.05, 15.0, true);
+        }
+        for(j = 0; j < test; ++j)
+        {
+            testObject[i].featureSet[j].extractSIFT_CV(
+                            data[i].getDataList(j),
+                            0.05, 15.0, true);
+        }
+    }
+
+    codex.alloc(200, descrSize);
+    //Next building the dictionary
+    codex.buildKClustering(trainObject,
+                            numClasses,
+                            numFeatures,
+                            descrSize,
+                            200, 3, 'a', 'e');
+}
+
+
+
+
+

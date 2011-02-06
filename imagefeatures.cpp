@@ -23,10 +23,10 @@ ImageFeatures::ImageFeatures(const ImageFeatures &cpy)
     int i, j;
     size = cpy.size;
     length = cpy.length;
-    descriptors = new float* [size];
+    descriptors = new double* [size];
     for(i = 0; i < size; i++)
     {
-        descriptors[i] = new float [length];
+        descriptors[i] = new double [length];
         for(j = 0; j < length; j++)
             descriptors[i][j] = cpy.descriptors[i][j];
     }
@@ -53,9 +53,9 @@ void ImageFeatures::alloc(int len, int s)
     int i, j;
     length = len;
     size = s;
-    descriptors = new float* [size];
+    descriptors = new double* [size];
     for(i = 0; i < size; i++)
-        descriptors[i] = new float[length];
+        descriptors[i] = new double[length];
     for(i = 0; i < size; i++)
         for(j = 0; j < length; j++)
             descriptors[i][j] = 0.0;
@@ -87,33 +87,48 @@ bool ImageFeatures::checkAlloc()
         return true;
 }
 
-void ImageFeatures::extractSIFT_CV(const cv::Mat& img, double p1, double p2)
+void ImageFeatures::extractSIFT_CV(char* imgName,
+                                   double p1,
+                                   double p2,
+                                   bool output)
 {
     dealloc();
     cv::SIFT siftFeatures(p1, p2);
     vector<cv::KeyPoint> pts;
+    cv::Mat img = cv::imread(imgName);
+    cv::Mat imgGray;
+    cvtColor(img, imgGray, CV_BGR2GRAY);
     cv::Mat descript; //With be 32F type
     cv::Mat mask;
 
-    siftFeatures(img, mask, pts, descript);
+    if(output)
+    {
+        cout << "Extracting SIFT features from image: "
+            << imgName << endl;
+    }
 
+    siftFeatures(imgGray, mask, pts, descript);
+    length = descript.cols;
+    size = descript.rows;
     alloc(length, size);
+
+    if(output)
+    {
+        cout << "Found " << size << " features" << endl;
+    }
 
     for(int i = 0; i < size; ++i)
     {
         const float* ptr = descript.ptr<float>(i);
         for(int j = 0; j < length; ++j)
         {
-            descriptors[i][j] = ptr[j];
+            descriptors[i][j] = (double)ptr[j];
         }
     }
 }
 
-
-
-
 // Copy the values in
-void ImageFeatures::copyDescriptors(const float** input, int count, int len)
+void ImageFeatures::copyDescriptors(const double** input, int count, int len)
 {
     int i, j;
     size = count;
@@ -121,9 +136,9 @@ void ImageFeatures::copyDescriptors(const float** input, int count, int len)
     // Allocate the memory if it hasn't been allocated, for the features
     if(descriptors == NULL)
     {
-        descriptors = new float* [size];
+        descriptors = new double* [size];
         for(i = 0; i < size; i++)
-            descriptors[i] = new float[length];
+            descriptors[i] = new double[length];
     }
     // Copy all the vectors for this image
     for(i = 0; i < size; i++)
@@ -135,7 +150,8 @@ void ImageFeatures::copyDescriptors(const float** input, int count, int len)
     }
 }
 
-bool ImageFeatures::copyDescriptorAt(const float* vector, int location)
+/*
+bool ImageFeatures::copyDescriptorAt(const double* vector, int location)
 {
     int i;
     // Make sure the memory has been allocated or location
@@ -164,162 +180,4 @@ bool ImageFeatures::copyDescriptorAt(const double* vector, int location)
         return true;
     }
 }
-
-///////////////////////////////////////////////////////////////////////////
-// HISTOGRAMS
-///////////////////////////////////////////////////////////////////////////
-
-HistogramFeatures::~HistogramFeatures()
-{
-    delete [] histogram;
-    histogram = NULL;
-}
-
-HistogramFeatures::HistogramFeatures()
-{
-    bins = 0;
-    label = NULL;
-    histogram = NULL;
-}
-
-HistogramFeatures::HistogramFeatures(int n, int l)
-{
-    int i;
-    bins = n;
-    label = l;
-    histogram = new float [bins];
-
-    for(i = 0; i < bins; i++)
-        histogram[i] = 0;
-}
-
-bool HistogramFeatures::alloc(int n, int l)
-{
-    int i;
-    if(histogram == NULL)
-    {
-        bins = n;
-        label = l;
-        histogram = new float [bins];
-        for(i = 0; i < bins; i++)
-            histogram[i] = 0;
-        return true;
-    }
-    else
-        return false;
-}
-
-bool HistogramFeatures::dealloc()
-{
-    if(histogram != NULL)
-    {
-        delete [] histogram;
-        histogram = NULL;
-        return true;
-    }
-    else
-        return false;
-}
-
-float HistogramFeatures::getValAt(int i)
-{
-    if(i > -1 && i < bins)
-        return histogram[i];
-    else
-        return -1;
-}
-
-bool HistogramFeatures::addToBin(int i)
-{
-    if(i > -1 && i < bins)
-    {
-        histogram[i]++;
-        return true;
-    }
-    else
-        return false;
-}
-
-// Normalize the bins in the histogram from 0 to 1
-void HistogramFeatures::normalizeHist()
-{
-    float magnitude = 0.0;
-    int i;
-    for(i = 0; i < bins; i++)
-    {
-        //magnitude += histogram[i][j]*histogram[i][j];
-        magnitude += histogram[i];
-    }
-    //magnitude = sqrt(magnitude);
-    // divide by the magnitude
-    if(magnitude > 0)
-    {
-        for(i = 0; i < bins; i++)
-            histogram[i] /= magnitude;
-    }
-}
-
-///////////////////////////////////////////////////
-// ObjectSet
-//////////////////////////////////////////////////
-
-ObjectSet::ObjectSet()
-{
-    featureSet = NULL;
-    histogramSet = NULL;
-    setCount = 0;
-}
-
-ObjectSet::~ObjectSet()
-{
-    delete [] featureSet;
-    delete [] histogramSet;
-}
-
-ObjectSet::ObjectSet(int l)
-{
-    featureSet = new ImageFeatures [l];
-    histogramSet = new HistogramFeatures [l];
-    setCount = l;
-}
-
-ObjectSet::ObjectSet(const ObjectSet &cpy)
-{
-    int i, j, k;
-    setCount = cpy.setCount;
-    featureSet = new ImageFeatures [setCount];
-    histogramSet = new HistogramFeatures [setCount];
-    for(i = 0; i < setCount; i++)
-    {
-        featureSet[i].length = cpy.featureSet[i].length;
-        featureSet[i].size = cpy.featureSet[i].size;
-        for(j = 0; j < cpy.featureSet[i].size; j++)
-            for(k = 0; k < cpy.featureSet[i].length; k++)
-                featureSet[i].descriptors[j][k] = cpy.featureSet[i].descriptors[j][k];
-
-        histogramSet[i].alloc(cpy.histogramSet[i].bins, cpy.histogramSet[i].label);
-        for(j = 0; j < histogramSet[i].bins; j++)
-            histogramSet[i].histogram[j] = cpy.histogramSet[i].histogram[j];
-    }
-}
-
-bool ObjectSet::alloc(int l)
-{
-    if(featureSet == NULL)
-    {
-        featureSet = new ImageFeatures [l];
-        histogramSet = new HistogramFeatures [l];
-        setCount = l;
-        return true;
-    }
-    else
-        return false;
-}
-
-void ObjectSet::dealloc()
-{
-    delete [] featureSet;
-    delete [] histogramSet;
-}
-
-
+*/
