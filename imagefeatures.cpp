@@ -87,6 +87,31 @@ bool ImageFeatures::checkAlloc()
         return true;
 }
 
+void ImageFeatures::extractSIFT_CV(const cv::Mat& img, double p1, double p2)
+{
+    dealloc();
+    cv::SIFT siftFeatures(p1, p2);
+    vector<cv::KeyPoint> pts;
+    cv::Mat descript; //With be 32F type
+    cv::Mat mask;
+
+    siftFeatures(img, mask, pts, descript);
+
+    alloc(length, size);
+
+    for(int i = 0; i < size; ++i)
+    {
+        const float* ptr = descript.ptr<float>(i);
+        for(int j = 0; j < length; ++j)
+        {
+            descriptors[i][j] = ptr[j];
+        }
+    }
+}
+
+
+
+
 // Copy the values in
 void ImageFeatures::copyDescriptors(const float** input, int count, int len)
 {

@@ -7,6 +7,11 @@
 ************************************************************/
 #include <fstream>
 #include <iostream>
+#include <cv.h>
+#include <cxcore.h>
+#include <highgui.h>
+
+#include "parameters.h"
 
 using namespace std;
 
@@ -29,6 +34,8 @@ class ImageFeatures
         bool dealloc();
         //Check to see if the descriptor was allocated
         bool checkAlloc();
+
+        void extractSIFT_CV(const cv::Mat& img, double p1, double p2);
 
         // Copy the values in
         void copyDescriptors(const float** input, int count, int len);
@@ -76,5 +83,6 @@ class ObjectSet
         ImageFeatures* featureSet;
         HistogramFeatures* histogramSet;
         int setCount;
+        int featureCount;
 };
 
