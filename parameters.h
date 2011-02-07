@@ -24,6 +24,9 @@ struct SVMParameters
     double cache;
     double eps;
     double nu;
+    double p;
+    int termType;
+    int iterations;
     int shrinking;
     int probability;
     int weight;
@@ -44,4 +47,4 @@ class BoFParameters
         int classifierType;
         int clusterType;
         int featureType;
-}
+};

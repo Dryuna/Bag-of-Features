@@ -82,6 +82,15 @@ void HistogramFeatures::buildBoF(const ImageFeatures &img,
     }
 }
 
+float HistogramFeatures::predict(CvSVM svm)
+{
+    cv::Mat hist(1, bins, CV_32FC1);
+    float* hPtr = hist.ptr<float>(0);
+    for(int i = 0; i < bins; ++i)
+        hPtr[i] = (float)histogram[i];
+
+    return svm.predict(hist);
+}
 
 // Normalize the bins in the histogram from 0 to 1
 void HistogramFeatures::normalizeHist()

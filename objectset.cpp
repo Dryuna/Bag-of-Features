@@ -72,5 +72,17 @@ void ObjectSet::buildBoFs(Dictionary &d, const int setLabel)
     }
 }
 
+double ObjectSet::predict(CvSVM svm, int setLabel)
+{
+    int i;
+    double pos = 0.0;
+    for(i = 0; i < setCount; ++i)
+    {
+        if(histogramSet[i].predict(svm) == (float)setLabel)
+            pos++;
+    }
+    return(pos / (double)setCount);
+}
+
 
 

@@ -22,7 +22,6 @@ BagOfFeatures::BagOfFeatures()
     testObject = NULL;
     validObject = NULL;
     trainObject = NULL;
-    SVMModel = NULL;
     //SVMModel_CV = NULL;
     //NBModel_CV = NULL;
 }
@@ -33,9 +32,6 @@ BagOfFeatures::BagOfFeatures(BoFParameters p, DataSet* val)
 
     params = p;
 
-    SVMModel = NULL;
-    //SVMModel_CV = NULL;
-    //NBModel_CV = NULL;
     testObject = new ObjectSet [params.numClasses];
     validObject = new ObjectSet [params.numClasses];
     trainObject = new ObjectSet [params.numClasses];
@@ -62,8 +58,8 @@ BagOfFeatures::~BagOfFeatures()
     delete [] validObject;
     delete [] trainObject;
     delete [] data;
-    if(SVMModel)
-        svm_destroy_model(SVMModel);
+    //if(SVMModel)
+    //    svm_destroy_model(SVMModel);
     //SVMModel_CV.clear();
     //NBModel_CV.clear();
 }
@@ -1729,6 +1725,54 @@ IplImage* preProcessImages(const IplImage* input, int minSize, int maxSize)
 }
 */
 
+void BagOfFeatures::trainSVM_CV()
+{
+    int i, j, k, l = -1;
+    int totalData = 0;
+
+    //Get the total number of training data
+    for(i = 0; i < params.numClasses; i++)
+        totalData += data[i].getTrainSize();
+
+    cv::Mat trainData(totalData, codex.size, CV_32FC1);
+    cv::Mat dataLabel(totalData, 1, CV_32FC1);
+
+    // For each class
+    for(i = 0; i < params.numClasses; i++)
+    {
+        // Get the number of images
+        int size = data[i].getTrainSize();
+        for(j = 0; j < size; j++)
+        {
+            l++;
+            float* lPtr = dataLabel.ptr<float>(l);
+            lPtr[0] = (float)data[i].getLabel();
+            float* dPtr = trainData.ptr<float>(l);
+            // Copy the histograms
+            for(k = 0; k < codex.length; k++)
+            {
+                dPtr[k] = trainObject[i].histogramSet[j].histogram[k];
+            }
+        }
+    }
+
+    CvSVMParams SVMParam_CV;
+    SVMParam_CV.svm_type = params.svmParams.type;
+    SVMParam_CV.kernel_type = params.svmParams.kernel;
+    SVMParam_CV.degree = params.svmParams.degree;
+    SVMParam_CV.gamma = params.svmParams.gamma;
+    SVMParam_CV.coef0 = params.svmParams.coef0;
+    SVMParam_CV.C = params.svmParams.C;
+    SVMParam_CV.nu = params.svmParams.nu;
+    SVMParam_CV.p = params.svmParams.p;
+    SVMParam_CV.class_weights = NULL;
+    SVMParam_CV.term_crit = cvTermCriteria(params.svmParams.termType,
+                                           params.svmParams.iterations,
+                                           params.svmParams.eps);
+
+    SVMModel_CV.train_auto(trainData, dataLabel, cv::Mat(), cv::Mat(),SVMParam_CV, 10);
+}
+
 void BagOfFeatures::process()
 {
     int i, j;
@@ -1790,6 +1834,28 @@ void BagOfFeatures::process()
     }
 }
 
+void BagOfFeatures::train()
+{
+    trainSVM_CV();
+}
+
+void BagOfFeatures::test()
+{
+    double results;
+    for(int i = 0; i < params.numClasses; ++i)
+    {
+        int label = data[i].getLabel();
+        results = trainObject[i].predict(SVMModel_CV, label);
+        cout << "Training dataset accuracy for class " << label
+            << ": " << results << endl;
+        results = validObject[i].predict(SVMModel_CV, label);
+        cout << "Validation dataset accuracy for class " << label
+            << ": " << results << endl;
+        results = testObject[i].predict(SVMModel_CV, label);
+        cout << "Test dataset accuracy for class " << label
+            << ": " << results << endl;
+    }
+}
 
 
 

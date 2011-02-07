@@ -82,7 +82,7 @@ class BagOfFeatures
 
         // Building the Histograms
         bool buildBofHistograms(bool normalize);
-*/
+
         void filterDictionary(double R);
 
         // Training the BoF
@@ -107,9 +107,10 @@ class BagOfFeatures
         float* resultsTest(CvNormalBayesClassifier *NBModel_CV);
 
         float predictClassification(ImageFeatures input, bool normalize);
-
+*/
         void process();
-
+        void train();
+        void test();
 
     private:
         //Data
@@ -129,10 +130,11 @@ class BagOfFeatures
         Dictionary codex;
 
         //Classifiers
-        struct svm_parameter SVMParam;
-        struct svm_model *SVMModel;
+        //struct svm_parameter SVMParam;
+        //struct svm_model *SVMModel;
 
         // The OpenCV algorithms, don't work well right now
-        //CvSVM SVMModel_CV;
+        CvSVM SVMModel_CV;
+        void trainSVM_CV();
         //CvNormalBayesClassifier NBModel_CV;
 };

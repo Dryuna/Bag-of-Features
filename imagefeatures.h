@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <cv.h>
+#include <ml.h>
 #include <cxcore.h>
 #include <highgui.h>
 
@@ -72,6 +73,8 @@ class HistogramFeatures
         bool addToBin(int i);
 
         void buildBoF(const ImageFeatures &img, Dictionary &d, int l);
+
+        float predict(CvSVM svm);
         // Normalize the bins in the histogram from 0 to 1
         void normalizeHist();
 
@@ -92,6 +95,8 @@ class ObjectSet
         void dealloc();
 
         void buildBoFs(Dictionary &d, int setLabel);
+
+        double predict(CvSVM svm, int setLabel);
 
         ImageFeatures* featureSet;
         HistogramFeatures* histogramSet;
