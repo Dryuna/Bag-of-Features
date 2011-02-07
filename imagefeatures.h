@@ -71,7 +71,7 @@ class HistogramFeatures
         float getValAt(int i);
         bool addToBin(int i);
 
-        void buildBoF(const ImageFeatures img, Dictionary d, int s, int l);
+        void buildBoF(const ImageFeatures &img, Dictionary &d, int l);
         // Normalize the bins in the histogram from 0 to 1
         void normalizeHist();
 
@@ -91,10 +91,11 @@ class ObjectSet
         bool alloc(int l);
         void dealloc();
 
+        void buildBoFs(Dictionary &d, int setLabel);
+
         ImageFeatures* featureSet;
         HistogramFeatures* histogramSet;
         int setCount;
-        int featureCount;
 };
 
 class Dictionary

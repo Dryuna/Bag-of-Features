@@ -66,20 +66,20 @@ bool HistogramFeatures::addToBin(int i)
         return false;
 }
 
-void HistogramFeatures::buildBoF(const ImageFeatures img,
-                                 Dictionary d,
-                                 int s, int l)
+void HistogramFeatures::buildBoF(const ImageFeatures &img,
+                                 Dictionary &d,
+                                 int l)
 {
     int i;
     int pos;
-    alloc(s, l);
+    alloc(d.size, l);
 
     for(i = 0; i < img.size; ++i)
     {
+        //cout << "Matching Feature " << i << "\n\t\t\t";
         pos = d.matchFeature(img.descriptors[i]);
         histogram[pos]++;
     }
-
 }
 
 

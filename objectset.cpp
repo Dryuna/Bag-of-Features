@@ -62,5 +62,15 @@ void ObjectSet::dealloc()
     delete [] histogramSet;
 }
 
+void ObjectSet::buildBoFs(Dictionary &d, const int setLabel)
+{
+    int i;
+    for(i = 0; i < setCount; ++i)
+    {
+        //cout << "Histogram" << i << "\n\t\t";
+        histogramSet[i].buildBoF(featureSet[i], d, setLabel);
+    }
+}
+
 
 

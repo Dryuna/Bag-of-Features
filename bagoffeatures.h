@@ -4,10 +4,13 @@
 #include <cxcore.h>
 #include <highgui.h>
 
-#include "libSVM/svm.h"
+
 #include "datasetinfo.h"
 #include "imagefeatures.h"
+#include "parameters.h"
+
 #include "Surf/surflib.h"
+#include "libSVM/svm.h"
 
 extern "C"
 {
@@ -26,15 +29,15 @@ class BagOfFeatures
 {
     public:
         BagOfFeatures();
-        BagOfFeatures(const int n, DataSet* val);
+        BagOfFeatures(BoFParameters p, DataSet* val);
         ~BagOfFeatures();
 
         // Allocates the Bag of Features
-        void allocBoF(const int n, DataSet* val);
+        void allocBoF(BoFParameters p, DataSet* val);
 
         int getNumFeatures()
         {
-            return numFeatures;
+            return params.numFeatures;
         };
 /*
         // Feature Extraction
@@ -114,9 +117,8 @@ class BagOfFeatures
         ObjectSet *validObject;
         ObjectSet *trainObject;
         DataSet *data;
-        int numClasses;
-        int numFeatures;
-        int descrSize;
+
+        BoFParameters params;
 
         //For Hierarchical Clustering
         double** hClusterData;
@@ -127,13 +129,10 @@ class BagOfFeatures
         Dictionary codex;
 
         //Classifiers
-        int classifierType;
         struct svm_parameter SVMParam;
         struct svm_model *SVMModel;
 
         // The OpenCV algorithms, don't work well right now
         //CvSVM SVMModel_CV;
         //CvNormalBayesClassifier NBModel_CV;
-
-        char classifierFile[64];
 };

@@ -210,5 +210,7 @@ int Dictionary::matchFeature(const double *feature)
             minIndex = i;
         }
     }
+
+    //cout << "MinIndex: " << minIndex << endl;
     return minIndex;
 }

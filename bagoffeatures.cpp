@@ -15,36 +15,35 @@ extern "C"
 
 BagOfFeatures::BagOfFeatures()
 {
-    numClasses = 0;
-    numFeatures = 0;
-    descrSize = 0;
+    params.numClasses = 0;
+    params.numFeatures = 0;
+    params.numImages = 0;
+    params.featureLength = 0;
     testObject = NULL;
     validObject = NULL;
     trainObject = NULL;
     SVMModel = NULL;
-    classifierType = -1;
     //SVMModel_CV = NULL;
     //NBModel_CV = NULL;
 }
 
-BagOfFeatures::BagOfFeatures(const int n, DataSet* val)
+BagOfFeatures::BagOfFeatures(BoFParameters p, DataSet* val)
 {
     int i;
 
-    numClasses = n;
-    numFeatures = 0;
-    descrSize = 0;
+    params = p;
+
     SVMModel = NULL;
     //SVMModel_CV = NULL;
     //NBModel_CV = NULL;
-    testObject = new ObjectSet [n];
-    validObject = new ObjectSet [n];
-    trainObject = new ObjectSet [n];
-    data = new DataSet [n];
-    classifierType = -1;
+    testObject = new ObjectSet [params.numClasses];
+    validObject = new ObjectSet [params.numClasses];
+    trainObject = new ObjectSet [params.numClasses];
+    data = new DataSet [params.numClasses];
+
     int train, valid, test, label;
 
-    for(i = 0; i < numClasses; i++)
+    for(i = 0; i < params.numClasses; i++)
     {
         data[i] = val[i];
         data[i].getDataInfo(train, valid, test, label);
@@ -59,9 +58,6 @@ BagOfFeatures::BagOfFeatures(const int n, DataSet* val)
 
 BagOfFeatures::~BagOfFeatures()
 {
-    numClasses = 0;
-    numFeatures = 0;
-    descrSize = 0;
     delete [] testObject;
     delete [] validObject;
     delete [] trainObject;
@@ -71,31 +67,28 @@ BagOfFeatures::~BagOfFeatures()
     //SVMModel_CV.clear();
     //NBModel_CV.clear();
 }
-/*
-void BagOfFeatures::allocBoF(const int n, DataSet* val)
+
+void BagOfFeatures::allocBoF(BoFParameters p, DataSet* val)
 {
     int i;
     if(data != NULL)
     {
-        numClasses = 0;
         delete [] testObject;
         delete [] validObject;
         delete [] trainObject;
         delete [] data;
     }
 
-    numClasses = n;
-    numFeatures = 0;
-    descrSize = 0;
-    classifierType = -1;
-    testObject = new ObjectSet [n];
-    validObject = new ObjectSet [n];
-    trainObject = new ObjectSet [n];
-    data = new DataSet [n];
+    params = p;
+
+    testObject = new ObjectSet [params.numClasses];
+    validObject = new ObjectSet [params.numClasses];
+    trainObject = new ObjectSet [params.numClasses];
+    data = new DataSet [params.numClasses];
 
     int train, valid, test, label;
 
-    for(i = 0; i < numClasses; i++)
+    for(i = 0; i < params.numClasses; i++)
     {
         data[i] = val[i];
         data[i].getDataInfo(train, valid, test, label);
@@ -108,7 +101,7 @@ void BagOfFeatures::allocBoF(const int n, DataSet* val)
     }
 }
 
-
+/*
 bool BagOfFeatures::extractSIFTFeatures(int lvls,
                                         double sigma,
                                         double thresh1,
@@ -1740,40 +1733,61 @@ void BagOfFeatures::process()
 {
     int i, j;
     int train, valid, test, label;
-    numFeatures = 0;
-    descrSize = 128;
+
+    params.numFeatures = 0;
+
     //First extracting the features
-    for(i = 0; i < numClasses; ++i)
+    for(i = 0; i < params.numClasses; ++i)
     {
         data[i].getDataInfo(train, valid, test, label);
         for(j = 0; j < train; ++j)
         {
             trainObject[i].featureSet[j].extractSIFT_CV(
                             data[i].getDataList(j),
-                            0.05, 15.0, true);
-            numFeatures += trainObject[i].featureSet[j].size;
+                            params.siftParams.detectionThreshold,
+                            params.siftParams.edgeThreshold,
+                            true);
+            params.numFeatures += trainObject[i].featureSet[j].size;
         }
         for(j = 0; j < valid; ++j)
         {
             validObject[i].featureSet[j].extractSIFT_CV(
                             data[i].getDataList(j),
-                            0.05, 15.0, true);
+                            params.siftParams.detectionThreshold,
+                            params.siftParams.edgeThreshold,
+                            true);
         }
         for(j = 0; j < test; ++j)
         {
             testObject[i].featureSet[j].extractSIFT_CV(
                             data[i].getDataList(j),
-                            0.05, 15.0, true);
+                            params.siftParams.detectionThreshold,
+                            params.siftParams.edgeThreshold,
+                            true);
         }
     }
 
-    codex.alloc(200, descrSize);
+    codex.alloc(params.clustParams.numClusters, params.featureLength);
     //Next building the dictionary
     codex.buildKClustering(trainObject,
-                            numClasses,
-                            numFeatures,
-                            descrSize,
-                            200, 3, 'a', 'e');
+                            params.numClasses,
+                            params.numFeatures,
+                            params.featureLength,
+                            params.clustParams.numClusters,
+                            params.clustParams.numPass,
+                            params.clustParams.method,
+                            params.clustParams.distance);
+
+    cout << "Building the histograms..." << endl;
+
+    for(i = 0; i < params.numClasses; ++i)
+    {
+        int label = data[i].getLabel();
+        //cout << "Class " << i << "\n\t";
+        trainObject[i].buildBoFs(codex, label);
+        validObject[i].buildBoFs(codex, label);
+        testObject[i].buildBoFs(codex, label);
+    }
 }
 
 
