@@ -72,7 +72,7 @@ void ObjectSet::buildBoFs(Dictionary &d, const int setLabel)
     }
 }
 
-double ObjectSet::predict(CvSVM svm, int setLabel)
+double ObjectSet::predict(CvSVM& svm, int setLabel)
 {
     int i;
     double pos = 0.0;

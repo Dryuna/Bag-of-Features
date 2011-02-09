@@ -130,8 +130,9 @@ class BagOfFeatures
         Dictionary codex;
 
         //Classifiers
-        //struct svm_parameter SVMParam;
-        //struct svm_model *SVMModel;
+        struct svm_parameter SVMParam;
+        struct svm_model *SVMModel;
+        void trainSVM();
 
         // The OpenCV algorithms, don't work well right now
         CvSVM SVMModel_CV;

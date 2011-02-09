@@ -22,6 +22,7 @@ BagOfFeatures::BagOfFeatures()
     testObject = NULL;
     validObject = NULL;
     trainObject = NULL;
+    SVMModel = NULL;
     //SVMModel_CV = NULL;
     //NBModel_CV = NULL;
 }
@@ -31,6 +32,7 @@ BagOfFeatures::BagOfFeatures(BoFParameters p, DataSet* val)
     int i;
 
     params = p;
+    SVMModel = NULL;
 
     testObject = new ObjectSet [params.numClasses];
     validObject = new ObjectSet [params.numClasses];
@@ -58,8 +60,8 @@ BagOfFeatures::~BagOfFeatures()
     delete [] validObject;
     delete [] trainObject;
     delete [] data;
-    //if(SVMModel)
-    //    svm_destroy_model(SVMModel);
+    if(SVMModel)
+        svm_destroy_model(SVMModel);
     //SVMModel_CV.clear();
     //NBModel_CV.clear();
 }
@@ -76,6 +78,9 @@ void BagOfFeatures::allocBoF(BoFParameters p, DataSet* val)
     }
 
     params = p;
+    if(SVMModel)
+        svm_destroy_model(SVMModel);
+    SVMModel = NULL;
 
     testObject = new ObjectSet [params.numClasses];
     validObject = new ObjectSet [params.numClasses];
@@ -1765,13 +1770,93 @@ void BagOfFeatures::trainSVM_CV()
     SVMParam_CV.C = params.svmParams.C;
     SVMParam_CV.nu = params.svmParams.nu;
     SVMParam_CV.p = params.svmParams.p;
-    SVMParam_CV.class_weights = NULL;
+    //SVMParam_CV.class_weights = 0;
     SVMParam_CV.term_crit = cvTermCriteria(params.svmParams.termType,
                                            params.svmParams.iterations,
                                            params.svmParams.eps);
 
-    SVMModel_CV.train_auto(trainData, dataLabel, cv::Mat(), cv::Mat(),SVMParam_CV, 10);
+    SVMModel_CV.train_auto(trainData, dataLabel, cv::Mat(), cv::Mat(), SVMParam_CV);
 }
+
+void BagOfFeatures::trainSVM()
+{
+    if(SVMModel != NULL)
+    {
+        svm_destroy_model(SVMModel);
+        //svm_destroy_param(&SVMParam);
+    }
+
+    int i, j, k, l = -1;
+    int totalData = 0;
+    int size, length = codex.size;
+    int count;
+    //Get the total number of training data
+    for(i = 0; i < params.numClasses; i++)
+        totalData += data[i].getTrainSize();
+
+    // Set up the data
+    struct svm_problem SVMProblem;
+    SVMProblem.l = totalData;
+    SVMProblem.y = new double [totalData];
+    SVMProblem.x = new struct svm_node* [totalData];
+
+    // For each class
+    for(i = 0; i < params.numClasses; i++)
+    {
+        // Get the number of images
+        size = data[i].getTrainSize();
+        for(j = 0; j < size; j++)
+        {
+            l++;
+            count = 0;
+            for(k = 0; k < length; k++)
+            {
+                if(trainObject[i].histogramSet[j].histogram[k] != 0)
+                    count++;
+            }
+            SVMProblem.x[l] = new struct svm_node [count+1];
+            count = 0;
+            for(k = 0; k < length; k++)
+            {
+                if(trainObject[i].histogramSet[j].histogram[k] != 0)
+                {
+                    SVMProblem.x[l][count].index = k+1;
+                    SVMProblem.x[l][count].value = trainObject[i].histogramSet[j].histogram[k];
+                    count++;
+                }
+            }
+            SVMProblem.x[l][count].index = -1;
+            SVMProblem.y[l] = data[i].getLabel();
+        }
+    }
+
+    // Types
+    SVMParam.svm_type = params.svmParams.type;
+    SVMParam.kernel_type = params.svmParams.kernel;
+    // Parameters
+    SVMParam.degree = params.svmParams.degree;
+    SVMParam.gamma = params.svmParams.gamma;
+    SVMParam.coef0 = params.svmParams.coef0;
+    SVMParam.C = params.svmParams.C;
+    // For training only
+    SVMParam.cache_size = params.svmParams.cache;
+    SVMParam.eps = params.svmParams.eps;
+    SVMParam.nu = params.svmParams.nu;
+    SVMParam.shrinking = params.svmParams.shrinking;
+    SVMParam.probability = params.svmParams.probability;
+    // Don't change the weights
+    SVMParam.nr_weight = params.svmParams.weight;
+
+
+    double* target = new double [totalData];
+    svm_check_parameter(&SVMProblem, &SVMParam);
+    svm_cross_validation(&SVMProblem, &SVMParam, 10, target);
+    SVMModel = svm_train(&SVMProblem, &SVMParam);
+    delete [] target;
+    //svm_save_model("svmSURF800",SVMModel);
+    //classifierType = LIBSVM_CLASSIFIER;
+}
+
 
 void BagOfFeatures::process()
 {
@@ -1836,7 +1921,8 @@ void BagOfFeatures::process()
 
 void BagOfFeatures::train()
 {
-    trainSVM_CV();
+    //trainSVM_CV();
+    trainSVM();
 }
 
 void BagOfFeatures::test()
