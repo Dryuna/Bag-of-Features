@@ -39,77 +39,11 @@ class BagOfFeatures
         {
             return params.numFeatures;
         };
-/*
-        // Feature Extraction
-        // Using SIFT Features
-        bool extractSIFTFeatures(int lvls,
-                                double sigma,
-                                double thresh1,
-                                int thresh2,
-                                int dbl,
-                                int width,
-                                int bins,
-                                int sizeMin,
-                                int sizeMax);
-        // Using SURF Features
-        bool extractSURFFeatures(bool invariant,
-                                int octaves,
-                                int intervals,
-                                int step,
-                                float thresh,
-                                int sizeMin,
-                                int sizeMax);
 
-
-        // Clustering Methods
-        //Hierarchical Clustering
-        bool buildHierarchicalTree(int transpose,
-                                char dist,
-                                char method,
-                                double** distmatrix);
-        bool cutHierarchicalTree(int numClusters);
-
-        //K-Means
-        bool buildKMeans(int numClusters,
-                         CvTermCriteria criteria,
-                         int repeat);
-
-        // C-Clustering lib kCluster function
-        bool buildKClustering(int numClusters,
-                            int pass,
-                            char method,
-                            char dist);
-
-        // Building the Histograms
-        bool buildBofHistograms(bool normalize);
-
-        void filterDictionary(double R);
-
-        // Training the BoF
-        void trainSVM(int type, int kernel, double degree, double gamma, double coef0,
-                        double C, double cache, double eps, double nu,
-                        int shrinking, int probability, int weight);
-
-        //Training using the opencv function
-        CvSVM* trainSVM_CV(int type, int kernel, double degree, double gamma,
-                         double coef0, double C, double nu, double p, int termType,
-                         int iterations, double eps, char* fileName);
-
-        CvNormalBayesClassifier* trainNormBayes_CV();
-
-        // Computing the results
-        float* resultsTraining();
-        float* resultsTraining(CvNormalBayesClassifier *NBModel_CV);
-        float* resultsTraining(CvSVM *SVMModel_CV);
-        float* resultsValidation();
-        float* resultsValidation(CvNormalBayesClassifier *NBModel_CV);
-        float* resultsTest();
-        float* resultsTest(CvNormalBayesClassifier *NBModel_CV);
-
-        float predictClassification(ImageFeatures input, bool normalize);
-*/
         void process();
+
         void train();
+
         void test();
 
     private:
@@ -132,7 +66,7 @@ class BagOfFeatures
         //Classifiers
         struct svm_parameter SVMParam;
         struct svm_model *SVMModel;
-        void trainSVM();
+        bool trainSVM();
 
         // The OpenCV algorithms, don't work well right now
         CvSVM SVMModel_CV;

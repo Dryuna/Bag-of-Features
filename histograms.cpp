@@ -80,6 +80,8 @@ void HistogramFeatures::buildBoF(const ImageFeatures &img,
         pos = d.matchFeature(img.descriptors[i]);
         histogram[pos]++;
     }
+
+    normalizeHist();
 }
 
 float HistogramFeatures::predict(CvSVM& svm)
@@ -90,6 +92,34 @@ float HistogramFeatures::predict(CvSVM& svm)
         hPtr[i] = (float)histogram[i];
 
     return svm.predict(hist, false);
+}
+
+double HistogramFeatures::predict(const svm_model* svm)
+{
+    //find the number of non-zero elements
+    int i, j;
+    int nCount = 0;
+    for(i = 0; i < bins; ++i)
+        if(histogram[i] != 0)
+            nCount++;
+
+    struct svm_node* testData = new struct svm_node [nCount+1];
+    j = 0;
+    for(i = 0; i < bins; ++i)
+    {
+        if(histogram[i] != 0)
+        {
+            testData[j].index = i+1;
+            testData[j].value = histogram[i];
+            ++j;
+        }
+    }
+    testData[nCount].index = -1;
+
+    double classification = svm_predict(svm, testData);
+    delete [] testData;
+
+    return classification;
 }
 
 // Normalize the bins in the histogram from 0 to 1

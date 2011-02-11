@@ -83,7 +83,6 @@ void Dictionary::buildKClustering(ObjectSet* obj,
     int i, j;
     int k = 0, l = 0, m = 0;
     int totalImages = 0;
-    int featureCount;
     int ifound;
     double* error = new double [numFeatures];
     int *clusterID = new int [numFeatures];

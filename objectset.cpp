@@ -84,5 +84,17 @@ double ObjectSet::predict(CvSVM& svm, int setLabel)
     return(pos / (double)setCount);
 }
 
+double ObjectSet::predict(const svm_model* svm, int setLabel)
+{
+    int i;
+    double pos = 0.0;
+    for(i = 0; i < setCount; ++i)
+    {
+        if(histogramSet[i].predict(svm) == (double)setLabel)
+            pos++;
+    }
+    return(pos / (double)setCount);
+}
+
 
 

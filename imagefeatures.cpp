@@ -95,9 +95,9 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
     dealloc();
     cv::SIFT siftFeatures(p1, p2);
     vector<cv::KeyPoint> pts;
-    cv::Mat img = cv::imread(imgName);
-    cv::Mat imgGray;
-    cvtColor(img, imgGray, CV_BGR2GRAY);
+    cv::Mat img = cv::imread(imgName, 0);
+    //cv::Mat imgGray;
+    //cvtColor(img, imgGray, CV_BGR2GRAY);
     cv::Mat descript; //With be 32F type
     cv::Mat mask;
 
@@ -107,7 +107,7 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
             << imgName << endl;
     }
 
-    siftFeatures(imgGray, mask, pts, descript);
+    siftFeatures(img, mask, pts, descript);
     length = descript.cols;
     size = descript.rows;
     alloc(length, size);

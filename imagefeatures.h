@@ -14,6 +14,7 @@
 #include <ml.h>
 #include <cxcore.h>
 #include <highgui.h>
+#include "libSVM/svm.h"
 
 using namespace std;
 
@@ -75,6 +76,7 @@ class HistogramFeatures
         void buildBoF(const ImageFeatures &img, Dictionary &d, int l);
 
         float predict(CvSVM& svm);
+        double predict(const svm_model* svm);
         // Normalize the bins in the histogram from 0 to 1
         void normalizeHist();
 
@@ -97,6 +99,7 @@ class ObjectSet
         void buildBoFs(Dictionary &d, int setLabel);
 
         double predict(CvSVM& svm, int setLabel);
+        double predict(const svm_model* svm, int setLabel);
 
         ImageFeatures* featureSet;
         HistogramFeatures* histogramSet;
