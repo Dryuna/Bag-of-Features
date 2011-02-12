@@ -49,6 +49,13 @@ class ImageFeatures
                             double p2,
                             bool output);
 
+        void extractSURF_CV(char* imgName,
+                            double hessThresh,
+                            int octaves,
+                            int layers,
+                            bool extend,
+                            bool output);
+
         // Copy the values in
         void copyDescriptors(const double** input, int count, int len);
         bool copyDescriptorAt(const double* vector, int location);

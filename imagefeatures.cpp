@@ -114,7 +114,7 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
 
     if(output)
     {
-        cout << "Found " << size << " features" << endl;
+        cout << "Found " << size << " keypoints" << endl;
     }
 
     for(int i = 0; i < size; ++i)
@@ -125,6 +125,51 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
             descriptors[i][j] = (double)ptr[j];
         }
     }
+}
+
+void ImageFeatures::extractSURF_CV(char* imgName,
+                            double hessThresh,
+                            int octaves,
+                            int layers,
+                            bool extend,
+                            bool output)
+{
+    dealloc();
+    cv::SURF surfFeatures(hessThresh, octaves, layers, extend);
+    vector<cv::KeyPoint> pts;
+    cv::Mat img = cv::imread(imgName, 0);
+    //cv::Mat imgGray;
+    //cvtColor(img, imgGray, CV_BGR2GRAY);
+    //cv::Mat descript; //With be 32F type
+    cv::Mat mask;
+    vector<float> descript;
+
+    if(output)
+    {
+        cout << "Extracting SURF features from image: "
+            << imgName << endl;
+    }
+
+    surfFeatures(img, mask, pts, descript);
+    //length = descript.cols;
+    //size = descript.rows;
+    //alloc(length, size);
+    size = ((int)descript.size())/64;
+
+    if(output)
+    {
+        cout << "Found " << size << " keypoints" << endl;
+    }
+/*
+    for(int i = 0; i < size; ++i)
+    {
+        const float* ptr = descript.ptr<float>(i);
+        for(int j = 0; j < length; ++j)
+        {
+            descriptors[i][j] = (double)ptr[j];
+        }
+    }
+    */
 }
 
 // Copy the values in

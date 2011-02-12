@@ -47,6 +47,8 @@ class BagOfFeatures
         void test();
 
     private:
+
+        void extractFeatures(ImageFeatures &f, char* imgName);
         //Data
         ObjectSet *testObject;
         ObjectSet *validObject;

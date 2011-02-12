@@ -103,6 +103,28 @@ void BagOfFeatures::allocBoF(BoFParameters p, DataSet* val)
 }
 
 
+void BagOfFeatures::extractFeatures(ImageFeatures &f, char* imgName)
+{
+    if(params.featureType == FEATURES_SIFT)
+    {
+        f.extractSIFT_CV(imgName,
+                    params.siftParams.detectionThreshold,
+                    params.siftParams.edgeThreshold,
+                    true);
+    }
+    else if(params.featureType == FEATURES_SURF)
+    {
+        f.extractSURF_CV(imgName,
+                    params.surfParams.hessianThreshold,
+                    params.surfParams.nOctives,
+                    params.surfParams.nLayers,
+                    params.surfParams.extended,
+                    true);
+
+    }
+}
+
+
 void BagOfFeatures::trainSVM_CV()
 {
     int i, j, k, l = -1;
@@ -149,13 +171,14 @@ void BagOfFeatures::trainSVM_CV()
                                            params.svmParams.eps);
 
     if(!SVMModel_CV.train_auto(trainData,
-                              dataLabel,
-                              cv::Mat(),
-                              cv::Mat(),
-                              SVMParam_CV))
-        cout << "Training failed, because OpenCV is Stupid..." << endl;
+                                dataLabel,
+                                cv::Mat(),
+                                cv::Mat(),
+                                SVMParam_CV,
+                                params.svmParams.kFold))
+        cout << "Training failed..." << endl;
     else
-        cout << "OpenCV is smart enough to train the SVM..." << endl;
+        cout << "Training successful..." << endl;
 
 }
 
@@ -264,30 +287,26 @@ void BagOfFeatures::process()
         data[i].getDataInfo(train, valid, test, label);
         for(j = 0; j < train; ++j)
         {
-            trainObject[i].featureSet[j].extractSIFT_CV(
-                            data[i].getDataList(j),
-                            params.siftParams.detectionThreshold,
-                            params.siftParams.edgeThreshold,
-                            true);
+            extractFeatures(trainObject[i].featureSet[j],
+                            data[i].getDataList(j));
             params.numFeatures += trainObject[i].featureSet[j].size;
+
         }
         for(j = 0; j < valid; ++j)
         {
-            validObject[i].featureSet[j].extractSIFT_CV(
-                            data[i].getDataList(train+j),
-                            params.siftParams.detectionThreshold,
-                            params.siftParams.edgeThreshold,
-                            true);
+            extractFeatures(validObject[i].featureSet[j],
+                            data[i].getDataList(train+j));
         }
         for(j = 0; j < test; ++j)
         {
-            testObject[i].featureSet[j].extractSIFT_CV(
-                            data[i].getDataList(train+valid+j),
-                            params.siftParams.detectionThreshold,
-                            params.siftParams.edgeThreshold,
-                            true);
+            extractFeatures(testObject[i].featureSet[j],
+                            data[i].getDataList(train+valid+j));
         }
     }
+
+    cout << "Total number of training features: " << params.numFeatures << endl;
+
+    delete [] data;
 
     codex.alloc(params.clustParams.numClusters, params.featureLength);
     //Next building the dictionary

@@ -1,3 +1,12 @@
+#define CLUSTERING_K_MEANS 0
+
+#define FEATURES_SIFT 0
+#define FEATURES_SURF 1
+
+#define CLASSIFIER_SVM 0
+#define CLASSIFIER_NAIVE_BAYES 1
+
+
 
 struct ClusteringParameters
 {
@@ -11,6 +20,14 @@ struct SIFTParameters
 {
     double detectionThreshold;
     double edgeThreshold;
+};
+
+struct SURFParamters
+{
+    double hessianThreshold;
+    int nOctives;
+    int nLayers;
+    bool extended;
 };
 
 struct SVMParameters
@@ -30,13 +47,20 @@ struct SVMParameters
     int shrinking;
     int probability;
     int weight;
+    int kFold;
 };
 
 class BoFParameters
 {
     public:
+        //Clustering parameters
         ClusteringParameters clustParams;
+
+        //Feature Parameters
         SIFTParameters siftParams;
+        SURFParamters surfParams;
+
+        //Classifier parameters
         SVMParameters svmParams;
 
         int numClasses;
