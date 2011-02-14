@@ -147,12 +147,15 @@ void BagOfFeatures::trainSVM_CV()
             l++;
             float* lPtr = dataLabel.ptr<float>(l);
             lPtr[0] = (float)data[i].getLabel();
+            cout << lPtr[0] << " ";
             float* dPtr = trainData.ptr<float>(l);
             // Copy the histograms
             for(k = 0; k < codex.length; k++)
             {
                 dPtr[k] = trainObject[i].histogramSet[j].histogram[k];
+                cout << dPtr[k] << " ";
             }
+            cout << endl;
         }
     }
 
@@ -306,7 +309,7 @@ void BagOfFeatures::process()
 
     cout << "Total number of training features: " << params.numFeatures << endl;
 
-    delete [] data;
+    //delete [] data;
 
     codex.alloc(params.clustParams.numClusters, params.featureLength);
     //Next building the dictionary

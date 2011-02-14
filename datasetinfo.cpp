@@ -79,6 +79,7 @@ DataSet& DataSet::operator=(const DataSet &rhs)
         strcpy(dataList[i], rhs.dataList[i]);
     }
 
+    return *this;
 }
 
 char* DataSet::getDataList(int index)
