@@ -91,7 +91,9 @@ float HistogramFeatures::predict(CvSVM& svm)
     for(int i = 0; i < bins; ++i)
         hPtr[i] = (float)histogram[i];
 
-    return svm.predict(hist, false);
+    double prediction = svm.predict(hist, false);
+
+    return prediction;
 }
 
 double HistogramFeatures::predict(const svm_model* svm)

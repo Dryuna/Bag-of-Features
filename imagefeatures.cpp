@@ -1,3 +1,4 @@
+#include <omp.h>
 #include "imagefeatures.h"
 #include "math.h"
 
@@ -117,6 +118,7 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
         cout << "Found " << size << " keypoints" << endl;
     }
 
+    #pragma omp parallel for
     for(int i = 0; i < size; ++i)
     {
         const float* ptr = descript.ptr<float>(i);

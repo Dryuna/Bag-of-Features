@@ -147,15 +147,15 @@ void BagOfFeatures::trainSVM_CV()
             l++;
             float* lPtr = dataLabel.ptr<float>(l);
             lPtr[0] = (float)data[i].getLabel();
-            cout << lPtr[0] << " ";
+            //cout << lPtr[0] << " ";
             float* dPtr = trainData.ptr<float>(l);
             // Copy the histograms
             for(k = 0; k < codex.length; k++)
             {
                 dPtr[k] = trainObject[i].histogramSet[j].histogram[k];
-                cout << dPtr[k] << " ";
+                //cout << dPtr[k] << " ";
             }
-            cout << endl;
+            //cout << endl;
         }
     }
 
@@ -290,20 +290,32 @@ void BagOfFeatures::process()
         data[i].getDataInfo(train, valid, test, label);
         for(j = 0; j < train; ++j)
         {
-            extractFeatures(trainObject[i].featureSet[j],
-                            data[i].getDataList(j));
+            trainObject[i].featureSet[j].extractSIFT_CV(data[i].getDataList(j),
+                    params.siftParams.detectionThreshold,
+                    params.siftParams.edgeThreshold,
+                    true);
+            //extractFeatures(trainObject[i].featureSet[j],
+             //               data[i].getDataList(j));
             params.numFeatures += trainObject[i].featureSet[j].size;
 
         }
         for(j = 0; j < valid; ++j)
         {
-            extractFeatures(validObject[i].featureSet[j],
-                            data[i].getDataList(train+j));
+            validObject[i].featureSet[j].extractSIFT_CV(data[i].getDataList(train+j),
+                    params.siftParams.detectionThreshold,
+                    params.siftParams.edgeThreshold,
+                    true);
+            //extractFeatures(validObject[i].featureSet[j],
+             //               data[i].getDataList(train+j));
         }
         for(j = 0; j < test; ++j)
         {
-            extractFeatures(testObject[i].featureSet[j],
-                            data[i].getDataList(train+valid+j));
+            testObject[i].featureSet[j].extractSIFT_CV(data[i].getDataList(train+valid+j),
+                    params.siftParams.detectionThreshold,
+                    params.siftParams.edgeThreshold,
+                    true);
+            //extractFeatures(testObject[i].featureSet[j],
+            //                data[i].getDataList(train+valid+j));
         }
     }
 
@@ -321,6 +333,8 @@ void BagOfFeatures::process()
                             params.clustParams.numPass,
                             params.clustParams.method,
                             params.clustParams.distance);
+
+    codex.calcCentroid();
 
     cout << "Building the histograms..." << endl;
 
