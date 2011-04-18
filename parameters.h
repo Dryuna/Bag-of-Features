@@ -50,20 +50,24 @@ struct SVMParameters
     int kFold;
 };
 
-class preProcessBase
+class PreprocessBaseFunction
 {
-
-}
+    public:
+        virtual void operator()(cv::Mat input, cv::Mat output)=0;
+};
 
 class BoFParameters
 {
     public:
-        //Clustering parameters
-        ClusteringParameters clustParams;
+        //Preprocessing images
+        PreprocessBaseFunction *preprocess;
 
         //Feature Parameters
         SIFTParameters siftParams;
         SURFParameters surfParams;
+
+        //Clustering parameters
+        ClusteringParameters clustParams;
 
         //Classifier parameters
         SVMParameters svmParams;

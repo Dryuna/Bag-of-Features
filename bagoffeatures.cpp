@@ -103,25 +103,26 @@ void BagOfFeatures::allocBoF(BoFParameters p, DataSet* val)
 }
 
 
-void BagOfFeatures::extractFeatures(ImageFeatures &f, char* imgName)
+void BagOfFeatures::extractFeatures(ImageFeatures &f, cv::Mat img)
 {
+    cv::Mat processed;
+    params.(*preprocess)(img, processed);
 
     if(params.featureType == FEATURES_SIFT)
     {
-        f.extractSIFT_CV(img,
+        f.extractSIFT_CV(processed,
                     params.siftParams.detectionThreshold,
                     params.siftParams.edgeThreshold,
                     params.verbose);
     }
     else if(params.featureType == FEATURES_SURF)
     {
-        f.extractSURF_CV(img,
+        f.extractSURF_CV(processed,
                     params.surfParams.hessianThreshold,
                     params.surfParams.nOctives,
                     params.surfParams.nLayers,
                     params.surfParams.extended,
                     params.verbose);
-
     }
 }
 
@@ -378,19 +379,23 @@ void BagOfFeatures::processDataSet(DataSet set, int obj)
 {
     int train, valid, test, label;
     int i;
+    cv::Mat img;
     set.getDataInfo(train, valid, test, label);
     for(i = 0; i < train; ++i)
     {
-        extractFeatures(trainObject[obj].featureSet[i], set.getDataList(i));
+        img = cv::imread(set.getDataList(i), 0);
+        extractFeatures(trainObject[obj].featureSet[i], img);
         params.numFeatures += trainObject[i].featureSet[j].size;
     }
     for(i = 0; i < valid; ++i)
     {
-        extractFeatures(validObject[obj].featureSet[i], set.getDataList(i+train));
+        img = cv::imread(set.getDataList(i+train), 0);
+        extractFeatures(validObject[obj].featureSet[i], img);
     }
     for(i = 0; i < test; ++i)
     {
-        extractFeatures(testObject[obj].featureSet[i], set.getDataList(i+train+valid));
+        img = cv::imread(set.getDataList(i+train+valid), 0);
+        extractFeatures(testObject[obj].featureSet[i], img);
     }
 }
 
