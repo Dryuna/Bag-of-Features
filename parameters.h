@@ -22,7 +22,7 @@ struct SIFTParameters
     double edgeThreshold;
 };
 
-struct SURFParamters
+struct SURFParameters
 {
     double hessianThreshold;
     int nOctives;
@@ -50,6 +50,11 @@ struct SVMParameters
     int kFold;
 };
 
+class preProcessBase
+{
+
+}
+
 class BoFParameters
 {
     public:
@@ -58,7 +63,7 @@ class BoFParameters
 
         //Feature Parameters
         SIFTParameters siftParams;
-        SURFParamters surfParams;
+        SURFParameters surfParams;
 
         //Classifier parameters
         SVMParameters svmParams;
@@ -71,4 +76,6 @@ class BoFParameters
         int classifierType;
         int clusterType;
         int featureType;
+
+        bool verbose;
 };

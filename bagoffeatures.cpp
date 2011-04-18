@@ -105,21 +105,22 @@ void BagOfFeatures::allocBoF(BoFParameters p, DataSet* val)
 
 void BagOfFeatures::extractFeatures(ImageFeatures &f, char* imgName)
 {
+
     if(params.featureType == FEATURES_SIFT)
     {
-        f.extractSIFT_CV(imgName,
+        f.extractSIFT_CV(img,
                     params.siftParams.detectionThreshold,
                     params.siftParams.edgeThreshold,
-                    true);
+                    params.verbose);
     }
     else if(params.featureType == FEATURES_SURF)
     {
-        f.extractSURF_CV(imgName,
+        f.extractSURF_CV(img,
                     params.surfParams.hessianThreshold,
                     params.surfParams.nOctives,
                     params.surfParams.nLayers,
                     params.surfParams.extended,
-                    true);
+                    params.verbose);
 
     }
 }
@@ -277,7 +278,7 @@ bool BagOfFeatures::trainSVM()
 }
 
 
-void BagOfFeatures::process()
+void BagOfFeatures::buildBoF()
 {
     int i, j;
     int train, valid, test, label;
@@ -373,6 +374,24 @@ void BagOfFeatures::test()
     }
 }
 
-
+void BagOfFeatures::processDataSet(DataSet set, int obj)
+{
+    int train, valid, test, label;
+    int i;
+    set.getDataInfo(train, valid, test, label);
+    for(i = 0; i < train; ++i)
+    {
+        extractFeatures(trainObject[obj].featureSet[i], set.getDataList(i));
+        params.numFeatures += trainObject[i].featureSet[j].size;
+    }
+    for(i = 0; i < valid; ++i)
+    {
+        extractFeatures(validObject[obj].featureSet[i], set.getDataList(i+train));
+    }
+    for(i = 0; i < test; ++i)
+    {
+        extractFeatures(testObject[obj].featureSet[i], set.getDataList(i+train+valid));
+    }
+}
 
 

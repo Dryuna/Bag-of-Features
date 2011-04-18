@@ -40,7 +40,7 @@ class BagOfFeatures
             return params.numFeatures;
         };
 
-        void process();
+        void buildBoF();
 
         void train();
 
@@ -49,6 +49,7 @@ class BagOfFeatures
     private:
 
         void extractFeatures(ImageFeatures &f, char* imgName);
+        void processDataSet(DataSet set, )
         //Data
         ObjectSet *testObject;
         ObjectSet *validObject;

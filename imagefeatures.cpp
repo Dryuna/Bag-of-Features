@@ -88,7 +88,7 @@ bool ImageFeatures::checkAlloc()
         return true;
 }
 
-void ImageFeatures::extractSIFT_CV(char* imgName,
+void ImageFeatures::extractSIFT_CV(cv::Mat img,
                                    double p1,
                                    double p2,
                                    bool output)
@@ -96,17 +96,10 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
     dealloc();
     cv::SIFT siftFeatures(p1, p2);
     vector<cv::KeyPoint> pts;
-    cv::Mat img = cv::imread(imgName, 0);
     //cv::Mat imgGray;
     //cvtColor(img, imgGray, CV_BGR2GRAY);
     cv::Mat descript; //With be 32F type
     cv::Mat mask;
-
-    if(output)
-    {
-        cout << "Extracting SIFT features from image: "
-            << imgName << endl;
-    }
 
     siftFeatures(img, mask, pts, descript);
     length = descript.cols;
@@ -128,7 +121,7 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
     }
 }
 
-void ImageFeatures::extractSURF_CV(char* imgName,
+void ImageFeatures::extractSURF_CV(cv::Mat img,
                             double hessThresh,
                             int octaves,
                             int layers,
@@ -138,18 +131,8 @@ void ImageFeatures::extractSURF_CV(char* imgName,
     dealloc();
     cv::SURF surfFeatures(hessThresh, octaves, layers, extend);
     vector<cv::KeyPoint> pts;
-    cv::Mat img = cv::imread(imgName, 0);
-    //cv::Mat imgGray;
-    //cvtColor(img, imgGray, CV_BGR2GRAY);
-    //cv::Mat descript; //With be 32F type
     cv::Mat mask;
     vector<float> descript;
-
-    if(output)
-    {
-        cout << "Extracting SURF features from image: "
-            << imgName << endl;
-    }
 
     surfFeatures(img, mask, pts, descript);
     if(extend)
