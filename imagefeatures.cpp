@@ -115,10 +115,9 @@ void ImageFeatures::extractSIFT_CV(char* imgName,
 
     if(output)
     {
-        cout << "Found " << size << " keypoints" << endl;
+        cout << "Found " << size << " SIFT keypoints" << endl;
     }
 
-    #pragma omp parallel for
     for(int i = 0; i < size; ++i)
     {
         const float* ptr = descript.ptr<float>(i);
@@ -153,25 +152,28 @@ void ImageFeatures::extractSURF_CV(char* imgName,
     }
 
     surfFeatures(img, mask, pts, descript);
-    //length = descript.cols;
-    //size = descript.rows;
-    //alloc(length, size);
-    size = ((int)descript.size())/64;
+    if(extend)
+        length = 128;
+    else
+        length = 64;
+
+    size = (descript.size())/length;
+    alloc(length, size);
 
     if(output)
     {
-        cout << "Found " << size << " keypoints" << endl;
+        cout << "Found " << size << " SURF keypoints" << endl;
     }
-/*
+
+    int k = 0;
     for(int i = 0; i < size; ++i)
     {
-        const float* ptr = descript.ptr<float>(i);
         for(int j = 0; j < length; ++j)
         {
-            descriptors[i][j] = (double)ptr[j];
+            descriptors[i][j] = descript.at(k);
+            k++;
         }
     }
-    */
 }
 
 // Copy the values in

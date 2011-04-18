@@ -150,7 +150,7 @@ void BagOfFeatures::trainSVM_CV()
             //cout << lPtr[0] << " ";
             float* dPtr = trainData.ptr<float>(l);
             // Copy the histograms
-            for(k = 0; k < codex.length; k++)
+            for(k = 0; k < codex.size; k++)
             {
                 dPtr[k] = trainObject[i].histogramSet[j].histogram[k];
                 //cout << dPtr[k] << " ";
