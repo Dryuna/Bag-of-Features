@@ -27,6 +27,17 @@ HistogramFeatures::HistogramFeatures(int n, int l)
         histogram[i] = 0;
 }
 
+HistogramFeatures::HistogramFeatures(const HistogramFeatures& hist)
+{
+    int i;
+    bins = hist.bins;
+    label = hist.label;
+    histogram = new double [bins];
+
+    for(i = 0; i < bins; i++)
+        histogram[i] = hist.histogram[i];
+}
+
 void HistogramFeatures::alloc(int n, int l)
 {
     dealloc();

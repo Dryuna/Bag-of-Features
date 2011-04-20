@@ -106,7 +106,7 @@ void BagOfFeatures::alloc(BoFParameters p, DataSet* val)
 void BagOfFeatures::extractFeatures(ImageFeatures &f, cv::Mat img)
 {
     cv::Mat processed;
-    params.(*preprocess)(img, processed);
+    (*params.preprocess)(img, processed);
 
     if(params.featureType == FEATURES_SIFT)
     {
@@ -281,14 +281,15 @@ bool BagOfFeatures::trainSVM()
 
 void BagOfFeatures::buildBoF()
 {
-    int i, j;
-    int train, valid, test, label;
+    int i;
 
     params.numFeatures = 0;
 
     //First extracting the features
     for(i = 0; i < params.numClasses; ++i)
     {
+        processDataSet(data[i], i);
+        /*
         data[i].getDataInfo(train, valid, test, label);
         for(j = 0; j < train; ++j)
         {
@@ -319,15 +320,21 @@ void BagOfFeatures::buildBoF()
             //extractFeatures(testObject[i].featureSet[j],
             //                data[i].getDataList(train+valid+j));
         }
+        */
     }
 
-    cout << "Total number of training features: " << params.numFeatures << endl;
+    if(params.verbose)
+        cout << "Total number of training features: " << params.numFeatures << endl;
 
     //delete [] data;
 
-    codex.alloc(params.clustParams.numClusters, params.featureLength);
+    //codex.alloc(params.clustParams.numClusters, params.featureLength);
     //Next building the dictionary
-    codex.buildKClustering(trainObject,
+    if(params.clusterType == CLUSTERING_K_MEANS)
+    {
+        if(params.verbose)
+            cout << "Clustering using K-Means with " << params.clustParams.numClusters << " clusters..." << endl;
+        codex.buildKClustering(trainObject,
                             params.numClasses,
                             params.numFeatures,
                             params.featureLength,
@@ -335,10 +342,26 @@ void BagOfFeatures::buildBoF()
                             params.clustParams.numPass,
                             params.clustParams.method,
                             params.clustParams.distance);
-
+    }
+    else if(params.clusterType == CLUSTERING_FLANN)
+    {
+        if(params.verbose)
+            cout << "Clustering using FLANN with " << params.clustParams.numClusters << " clusters..." << endl;
+        codex.FLANNClustering(trainObject,
+                            params.numClasses,
+                            params.numFeatures,
+                            params.featureLength,
+                            params.clustParams.numClusters,
+                            params.clustParams.branching,
+                            params.clustParams.numPass,
+                            params.clustParams.FLANNmethod,
+                            params.clustParams.cbIndex
+                            );
+    }
     codex.calcCentroid();
 
-    cout << "Building the histograms..." << endl;
+    if(params.verbose)
+        cout << "Building the histograms..." << endl;
 
     for(i = 0; i < params.numClasses; ++i)
     {
@@ -357,7 +380,7 @@ void BagOfFeatures::train()
     //    cout << "Training Failed Because LibSVM is a horrible library..." << endl;
 }
 
-void BagOfFeatures::test()
+void BagOfFeatures::testDataSet()
 {
     double results;
     for(int i = 0; i < params.numClasses; ++i)
@@ -383,19 +406,25 @@ void BagOfFeatures::processDataSet(DataSet set, int obj)
     set.getDataInfo(train, valid, test, label);
     for(i = 0; i < train; ++i)
     {
+        if(params.verbose)
+            cout << "Loading training image: " << set.getDataList(i) << endl;
         img = cv::imread(set.getDataList(i), 0);
         extractFeatures(trainObject[obj].featureSet[i], img);
-        params.numFeatures += trainObject[i].featureSet[j].size;
+        params.numFeatures += trainObject[obj].featureSet[i].size;
     }
     for(i = 0; i < valid; ++i)
     {
+        if(params.verbose)
+            cout << "Loading validation image: " << set.getDataList(i+train) << endl;
         img = cv::imread(set.getDataList(i+train), 0);
         extractFeatures(validObject[obj].featureSet[i], img);
     }
     for(i = 0; i < test; ++i)
     {
+        if(params.verbose)
+            cout << "Loading test image: " << set.getDataList(i+train+valid) << endl;
         img = cv::imread(set.getDataList(i+train+valid), 0);
-        extractFeatures(testObject[obj].featureSet[i], i);
+        extractFeatures(testObject[obj].featureSet[i], img);
     }
 }
 

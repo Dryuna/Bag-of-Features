@@ -30,6 +30,29 @@ Dictionary::Dictionary(int n, int m)
     centroid = new double [length];
 }
 
+Dictionary::Dictionary(const Dictionary &dict)
+{
+    size = dict.size;
+    length = dict.length;
+
+    dictionary = new double* [size];
+    for(int i = 0; i < size; ++i)
+    {
+        dictionary[i] = new double [length];
+        for(int j = 0; j < length; ++j)
+        {
+            dictionary[i][j] = dict.dictionary[i][j];
+        }
+    }
+
+    centroid = new double [length];
+    for(int i = 0; i < length; ++i)
+    {
+        centroid[i] = dict.centroid[i];
+    }
+
+}
+
 Dictionary::~Dictionary()
 {
      dealloc();
@@ -169,6 +192,61 @@ void Dictionary::buildKClustering(ObjectSet* obj,
     delete [] error;
     delete [] clusterID;
 
+}
+
+void Dictionary::FLANNClustering(ObjectSet* obj,
+                                 int numClasses,
+                                 int numFeatures,
+                                 int featureLength,
+                                 int numClusters,
+                                 int branching,
+                                 int iterations,
+                                 cvflann::flann_centers_init_t centerInit,
+                                 float cbIndex
+                                 )
+{
+    cv::Mat featureMat(numFeatures,featureLength, CV_32F);
+    cv::Mat clusterCenters(numClusters, featureLength, CV_32F);
+    cvflann::KMeansIndexParams params(branching, iterations, centerInit, cbIndex);
+    int i, j, k, l, m=0;
+    int totalImages;
+    float* ptr;
+
+    for(i = 0; i < numClasses; i++)
+    {
+        totalImages = obj[i].setCount;
+        // For each image in that class...
+        for(j = 0; j < totalImages; j++)
+        {
+            // for each feature in that image...
+            for(k = 0; k < obj[i].featureSet[j].size; k++)
+            {
+                ptr = featureMat.ptr<float>(m);
+                // Copy the descriptor into the data array
+                for(l = 0; l < featureLength; l++)
+                {
+                    ptr[l] = (double)obj[i].featureSet[j].descriptors[k][l];
+                    //cout << featureData[k][j] << " ";
+                }
+                //cout << endl;
+                m++;
+            }
+        }
+    }
+
+    size = cv::flann::hierarchicalClustering<float,float>(featureMat, clusterCenters, params);
+
+    length = featureLength;
+    alloc(size, length);
+
+    for(i = 0; i < size; ++i)
+    {
+        ptr = clusterCenters.ptr<float>(i);
+        for(j = 0; j < length; ++j)
+        {
+            dictionary[i][j] = ptr[j];
+        }
+    }
 }
 
 void Dictionary::calcCentroid()

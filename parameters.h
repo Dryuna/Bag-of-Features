@@ -1,12 +1,12 @@
 #define CLUSTERING_K_MEANS 0
+#define CLUSTERING_FLANN 1
 
 #define FEATURES_SIFT 0
 #define FEATURES_SURF 1
 
 #define CLASSIFIER_SVM 0
-#define CLASSIFIER_NAIVE_BAYES 1
-
-
+#define CLASSIFIER_SVM_CV 1
+#define CLASSIFIER_NAIVE_BAYES 2
 
 struct ClusteringParameters
 {
@@ -14,6 +14,10 @@ struct ClusteringParameters
     int numPass;
     char method;
     char distance;
+    //For FLANN
+    cvflann::flann_centers_init_t FLANNmethod;
+    int branching;
+    float cbIndex;
 };
 
 struct SIFTParameters
@@ -53,7 +57,7 @@ struct SVMParameters
 class PreprocessBaseFunction
 {
     public:
-        virtual void operator()(cv::Mat input, cv::Mat output)=0;
+        virtual void operator()(cv::Mat input, cv::Mat &output)=0;
 };
 
 class BoFParameters

@@ -47,12 +47,33 @@ DataSet::DataSet(int t, double t_p, double v_p, double s_p, int l, int len=64)
         dataList[i] = new char [len];
 }
 
+DataSet::DataSet(const DataSet& data)
+{
+    total = data.total;
+    train = data.train;
+    valid = data.valid;
+    test = data.test;
+    label = data.label;
+    length = data.length;
+
+    int i;
+    dataList = new char* [total];
+    for(i = 0; i < total; i++)
+    {
+        dataList[i] = new char [length];
+        strcpy(dataList[i], data.dataList[i]);
+    }
+}
+
 DataSet::~DataSet()
 {
-    int i;
-    for(i = 0; i < total; i++)
-        delete [] dataList[i];
-    delete[] dataList;
+    if(dataList != NULL)
+    {
+        int i;
+        for(i = 0; i < total; i++)
+            delete [] dataList[i];
+        delete[] dataList;
+    }
 }
 
 DataSet& DataSet::operator=(const DataSet &rhs)

@@ -44,12 +44,12 @@ class ImageFeatures
         //Check to see if the descriptor was allocated
         bool checkAlloc();
 
-        void extractSIFT_CV(char* imgName,
+        void extractSIFT_CV(cv::Mat img,
                             double p1,
                             double p2,
                             bool output);
 
-        void extractSURF_CV(char* imgName,
+        void extractSURF_CV(cv::Mat img,
                             double hessThresh,
                             int octaves,
                             int layers,
@@ -73,6 +73,7 @@ class HistogramFeatures
         ~HistogramFeatures();
         HistogramFeatures();
         HistogramFeatures(int n, int l);
+        HistogramFeatures(const HistogramFeatures& hist);
 
         void alloc(int n, int l);
         void dealloc();
@@ -118,6 +119,7 @@ class Dictionary
     public:
         Dictionary();
         Dictionary(int n, int m);
+        Dictionary(const Dictionary &dict);
         ~Dictionary();
 
         void dealloc();
@@ -132,6 +134,18 @@ class Dictionary
                             int pass,
                             char method,
                             char dist);
+
+        void FLANNClustering(ObjectSet* obj,
+                            int numClasses,
+                            int numFeatures,
+                            int featureLength,
+                            int numClusters,
+                            int branching,
+                            int iterations,
+                            cvflann::flann_centers_init_t centerInit,
+                            float cbIndex
+                            );
+
         void calcCentroid();
         int matchFeature(const double *feature);
 

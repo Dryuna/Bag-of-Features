@@ -57,6 +57,8 @@ class DataSet
         // Set the number of train, validation, and test data
         DataSet(int t, int v, int s, int l, int len);
 
+        DataSet(const DataSet& data);
+
         /*!
         \brief Constructor with known total size, and desired data splitting.
 
