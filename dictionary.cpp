@@ -219,3 +219,32 @@ int Dictionary::matchFeature(const double *feature)
     //cout << "MinIndex: " << minIndex << endl;
     return minIndex;
 }
+
+Dictionary& Dictionary::operator=(const Dictionary &rhs)
+{
+    if(this == &rhs)
+        return *this;
+
+    dealloc();
+
+    this->size = rhs.size;
+    this->length = rhs.length;
+
+    this->dictionary = new double* [this->size];
+    for(int i = 0; i < this->size; ++i)
+    {
+        this->dictionary[i] = new double [this->length];
+        for(int j = 0; j < this->length; ++j)
+        {
+            this->dictionary[i][j] = rhs.dictionary[i][j];
+        }
+    }
+
+    centroid = new double [length];
+    for(int i = 0; i < length; ++i)
+    {
+        centroid[i] = rhs.centroid[i];
+    }
+
+    return *this;
+}

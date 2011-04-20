@@ -33,23 +33,17 @@ class BagOfFeatures
         ~BagOfFeatures();
 
         // Allocates the Bag of Features
-        void allocBoF(BoFParameters p, DataSet* val);
+        void alloc(BoFParameters p, DataSet* val);
 
-        int getNumFeatures()
-        {
-            return params.numFeatures;
-        };
+        void extractFeatures(ImageFeatures &f, cv::Mat img);
 
         void buildBoF();
-
         void train();
-
-        void test();
+        void testDataSet();
 
     private:
 
-        void extractFeatures(ImageFeatures &f, char* imgName);
-        void processDataSet(DataSet set, )
+        void processDataSet(DataSet set, int obj);
         //Data
         ObjectSet *testObject;
         ObjectSet *validObject;

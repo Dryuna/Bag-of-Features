@@ -66,7 +66,7 @@ BagOfFeatures::~BagOfFeatures()
     //NBModel_CV.clear();
 }
 
-void BagOfFeatures::allocBoF(BoFParameters p, DataSet* val)
+void BagOfFeatures::alloc(BoFParameters p, DataSet* val)
 {
     int i;
     if(data != NULL)
@@ -395,7 +395,7 @@ void BagOfFeatures::processDataSet(DataSet set, int obj)
     for(i = 0; i < test; ++i)
     {
         img = cv::imread(set.getDataList(i+train+valid), 0);
-        extractFeatures(testObject[obj].featureSet[i], img);
+        extractFeatures(testObject[obj].featureSet[i], i);
     }
 }
 

@@ -135,6 +135,8 @@ class Dictionary
         void calcCentroid();
         int matchFeature(const double *feature);
 
+        Dictionary& operator=(const Dictionary &rhs);
+
         double** dictionary;
         double* centroid;
         int size;
