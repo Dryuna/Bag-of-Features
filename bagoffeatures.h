@@ -42,6 +42,8 @@ class BagOfFeatures
         void train();
         void testDataSet();
 
+        double classifyImage(cv::Mat img);
+
     private:
 
         void processDataSet(DataSet set, int obj);

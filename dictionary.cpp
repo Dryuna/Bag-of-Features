@@ -1,3 +1,5 @@
+//#include <vector>
+
 extern "C"
 {
     #include "libCluster/cluster.h"
@@ -8,6 +10,7 @@ Dictionary::Dictionary()
 {
     dictionary = NULL;
     centroid = NULL;
+    //matcher = NULL;
     size = 0;
     length = 0;
 }
@@ -28,6 +31,7 @@ Dictionary::Dictionary(int n, int m)
     }
 
     centroid = new double [length];
+    matcher = NULL;
 }
 
 Dictionary::Dictionary(const Dictionary &dict)
@@ -51,6 +55,7 @@ Dictionary::Dictionary(const Dictionary &dict)
         centroid[i] = dict.centroid[i];
     }
 
+    matcher = dict.matcher;
 }
 
 Dictionary::~Dictionary()
@@ -65,8 +70,11 @@ void Dictionary::dealloc()
         for(int i = 0; i < size; ++i)
             delete [] dictionary[i];
         delete [] dictionary;
-        delete [] centroid;
     }
+    if(centroid != NULL)
+        delete [] centroid;
+    if(matcher != NULL)
+        delete matcher;
 }
 
 void Dictionary::alloc(int n, int m)
@@ -87,6 +95,7 @@ void Dictionary::alloc(int n, int m)
     }
 
     centroid = new double [length];
+    matcher = NULL;
 }
 
 // C-Clustering lib kCluster function
@@ -238,6 +247,10 @@ void Dictionary::FLANNClustering(ObjectSet* obj,
 
     alloc(clustersFound, featureLength);
 
+    cvflann::AutotunedIndexParams matchParams;
+
+    matcher = new cv::flann::Index(featureMat, matchParams);
+
     for(i = 0; i < size; ++i)
     {
         ptr = clusterCenters.ptr<float>(i);
@@ -268,6 +281,7 @@ void Dictionary::calcCentroid()
     //cout << endl;
 }
 
+/*
 int Dictionary::matchFeature(const double *feature)
 {
     int i, j;
@@ -294,6 +308,26 @@ int Dictionary::matchFeature(const double *feature)
     //cout << "MinIndex: " << minIndex << endl;
     return minIndex;
 }
+*/
+
+int Dictionary::matchFeature(const double *feature)
+{
+    if(matcher != NULL)
+    {
+        std::vector<float> query;
+        std::vector<int> indexes;
+        std::vector<float> distances;
+        cvflann::SearchParams s;
+
+        matcher->knnSearch(query, indexes, distances, 16, s);
+
+        //cout << "MinIndex: " << minIndex << endl;
+        return indexes[0];
+    }
+    else
+        return 0;
+}
+
 
 Dictionary& Dictionary::operator=(const Dictionary &rhs)
 {

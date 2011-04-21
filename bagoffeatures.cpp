@@ -439,6 +439,27 @@ void BagOfFeatures::testDataSet()
     }
 }
 
+double BagOfFeatures::classifyImage(cv::Mat img)
+{
+    cv::Mat processed;
+    (*params.preprocess)(img, processed);
+
+    ImageFeatures feat;
+    HistogramFeatures hist;
+
+    //Extract the features
+    extractFeatures(feat, processed);
+    //Build the histogram
+    hist.buildBoF(feat, codex, -1);
+
+    if(CLASSIFIER_SVM_CV)
+        return hist.predict(SVMModel_CV);
+    else if(CLASSIFIER_SVM)
+        return hist.predict(SVMModel);
+    else
+        return 0;
+}
+
 double BagOfFeatures::testSet(ObjectSet obj, int label)
 {
     double result;

@@ -153,6 +153,8 @@ class Dictionary
 
         double** dictionary;
         double* centroid;
+        cv::flann::Index *matcher;
+
         int size;
         int length;
 };
