@@ -234,10 +234,9 @@ void Dictionary::FLANNClustering(ObjectSet* obj,
         }
     }
 
-    size = cv::flann::hierarchicalClustering<float,float>(featureMat, clusterCenters, params);
+    int clustersFound = cv::flann::hierarchicalClustering<float,float>(featureMat, clusterCenters, params);
 
-    length = featureLength;
-    alloc(size, length);
+    alloc(clustersFound, featureLength);
 
     for(i = 0; i < size; ++i)
     {
