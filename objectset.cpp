@@ -31,8 +31,7 @@ ObjectSet::ObjectSet(const ObjectSet &cpy)
     histogramSet = new HistogramFeatures [setCount];
     for(i = 0; i < setCount; i++)
     {
-        featureSet[i].length = cpy.featureSet[i].length;
-        featureSet[i].size = cpy.featureSet[i].size;
+        featureSet[i].alloc(cpy.featureSet[i].length, cpy.featureSet[i].size);
         for(j = 0; j < cpy.featureSet[i].size; j++)
             for(k = 0; k < cpy.featureSet[i].length; k++)
                 featureSet[i].descriptors[j][k] = cpy.featureSet[i].descriptors[j][k];

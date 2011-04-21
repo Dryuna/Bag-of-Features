@@ -264,11 +264,9 @@ void Dictionary::calcCentroid()
     for(int i = 0; i < length; ++i)
     {
         centroid[i] /= (double)size;
-        cout << centroid[i] << " ";
+        //cout << centroid[i] << " ";
     }
-
-    cout << endl;
-
+    //cout << endl;
 }
 
 int Dictionary::matchFeature(const double *feature)

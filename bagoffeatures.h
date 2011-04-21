@@ -36,6 +36,7 @@ class BagOfFeatures
         void alloc(BoFParameters p, DataSet* val);
 
         void extractFeatures(ImageFeatures &f, cv::Mat img);
+        void clusterFeatures();
 
         void buildBoF();
         void train();
@@ -59,6 +60,7 @@ class BagOfFeatures
         //Visual Dictionary
         //CvMat* dictionary;
         Dictionary codex;
+        void optimizeDictionary();
 
         //Classifiers
         struct svm_parameter SVMParam;
@@ -68,5 +70,7 @@ class BagOfFeatures
         // The OpenCV algorithms, don't work well right now
         CvSVM SVMModel_CV;
         void trainSVM_CV();
+
+        double testSet(ObjectSet obj, int label);
         //CvNormalBayesClassifier NBModel_CV;
 };

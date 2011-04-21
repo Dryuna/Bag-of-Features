@@ -126,11 +126,105 @@ void BagOfFeatures::extractFeatures(ImageFeatures &f, cv::Mat img)
     }
 }
 
+void BagOfFeatures::clusterFeatures()
+{
+    if(params.clusterType == CLUSTERING_K_MEANS)
+    {
+        if(params.verbose)
+            cout << "Clustering using K-Means with " << params.clustParams.numClusters << " clusters..." << endl;
+        codex.buildKClustering(trainObject,
+                            params.numClasses,
+                            params.numFeatures,
+                            params.featureLength,
+                            params.clustParams.numClusters,
+                            params.clustParams.numPass,
+                            params.clustParams.method,
+                            params.clustParams.distance);
+    }
+    else if(params.clusterType == CLUSTERING_FLANN)
+    {
+        if(params.verbose)
+            cout << "Clustering using FLANN with " << params.clustParams.numClusters << " clusters..." << endl;
+        codex.FLANNClustering(trainObject,
+                            params.numClasses,
+                            params.numFeatures,
+                            params.featureLength,
+                            params.clustParams.numClusters,
+                            params.clustParams.branching,
+                            params.clustParams.numPass,
+                            params.clustParams.FLANNmethod,
+                            params.clustParams.cbIndex
+                            );
+    }
+}
+
+void BagOfFeatures::optimizeDictionary()
+{
+    int i, j, k;
+    Dictionary bestCodex;
+    double avgAccuracy;
+    double bestAvgAccuracy = 0;
+    int label;
+
+    i = 0;
+
+    cout << "\nOptimizing the dictionary for the Bag of Features..." << endl;
+
+    while(i < params.optParams.numSteps)
+    {
+        for(j = 0; j < params.optParams.clusterRepeat; ++j)
+        {
+            clusterFeatures();
+            if(params.verbose)
+                cout << "Building the histograms of features..." << endl;
+            for(k = 0; k < params.numClasses; ++k)
+            {
+                label = data[k].getLabel();
+                trainObject[k].buildBoFs(codex, label);
+                validObject[k].buildBoFs(codex, label);
+            }
+            //Train the classifier
+            train();
+
+            avgAccuracy = 0;
+            for(k = 0; k < params.numClasses; ++k)
+            {
+                label = data[k].getLabel();
+                avgAccuracy += testSet(validObject[k], label);
+            }
+            avgAccuracy /= (double)params.numClasses;
+            if(avgAccuracy > bestAvgAccuracy)
+            {
+                bestAvgAccuracy = avgAccuracy;
+                bestCodex = codex;
+            }
+
+            if(params.verbose)
+            {
+                cout << "Average accuracy: " << avgAccuracy
+                    << " (Best so far: " << bestAvgAccuracy << ")" << endl;
+            }
+            cout << endl;
+        }
+        ++i;
+        params.clustParams.numClusters += params.optParams.clusterStep;
+    }
+
+    if(params.verbose)
+        cout << "Best validation results: " << bestAvgAccuracy << endl;
+
+    codex = bestCodex;
+    params.clustParams.numClusters = codex.size;
+}
 
 void BagOfFeatures::trainSVM_CV()
 {
     int i, j, k, l = -1;
     int totalData = 0;
+
+    if(params.verbose)
+        cout << "Training SVM Classifier (OpenCV)..." << endl;
+
 
     //Get the total number of training data
     for(i = 0; i < params.numClasses; i++)
@@ -182,7 +276,7 @@ void BagOfFeatures::trainSVM_CV()
                                 SVMParam_CV,
                                 params.svmParams.kFold))
         cout << "Training failed..." << endl;
-    else
+    else if(params.verbose)
         cout << "Training successful..." << endl;
 
 }
@@ -194,6 +288,9 @@ bool BagOfFeatures::trainSVM()
         svm_destroy_model(SVMModel);
         //svm_destroy_param(&SVMParam);
     }
+
+    if(params.verbose)
+        cout << "Training SVM Classifier (libSVM)..." << endl;
 
     int i, j, k, l = -1;
     int totalData = 0;
@@ -267,6 +364,7 @@ bool BagOfFeatures::trainSVM()
     {
         //svm_cross_validation(&SVMProblem, &SVMParam, 10, target);
         SVMModel = svm_train(&SVMProblem, &SVMParam);
+        cout << "Training successful!" << endl;
         return true;
     }
     else
@@ -289,38 +387,6 @@ void BagOfFeatures::buildBoF()
     for(i = 0; i < params.numClasses; ++i)
     {
         processDataSet(data[i], i);
-        /*
-        data[i].getDataInfo(train, valid, test, label);
-        for(j = 0; j < train; ++j)
-        {
-            trainObject[i].featureSet[j].extractSIFT_CV(data[i].getDataList(j),
-                    params.siftParams.detectionThreshold,
-                    params.siftParams.edgeThreshold,
-                    true);
-            //extractFeatures(trainObject[i].featureSet[j],
-             //               data[i].getDataList(j));
-            params.numFeatures += trainObject[i].featureSet[j].size;
-
-        }
-        for(j = 0; j < valid; ++j)
-        {
-            validObject[i].featureSet[j].extractSIFT_CV(data[i].getDataList(train+j),
-                    params.siftParams.detectionThreshold,
-                    params.siftParams.edgeThreshold,
-                    true);
-            //extractFeatures(validObject[i].featureSet[j],
-             //               data[i].getDataList(train+j));
-        }
-        for(j = 0; j < test; ++j)
-        {
-            testObject[i].featureSet[j].extractSIFT_CV(data[i].getDataList(train+valid+j),
-                    params.siftParams.detectionThreshold,
-                    params.siftParams.edgeThreshold,
-                    true);
-            //extractFeatures(testObject[i].featureSet[j],
-            //                data[i].getDataList(train+valid+j));
-        }
-        */
     }
 
     if(params.verbose)
@@ -330,39 +396,14 @@ void BagOfFeatures::buildBoF()
 
     //codex.alloc(params.clustParams.numClusters, params.featureLength);
     //Next building the dictionary
-    if(params.clusterType == CLUSTERING_K_MEANS)
-    {
-        if(params.verbose)
-            cout << "Clustering using K-Means with " << params.clustParams.numClusters << " clusters..." << endl;
-        codex.buildKClustering(trainObject,
-                            params.numClasses,
-                            params.numFeatures,
-                            params.featureLength,
-                            params.clustParams.numClusters,
-                            params.clustParams.numPass,
-                            params.clustParams.method,
-                            params.clustParams.distance);
-    }
-    else if(params.clusterType == CLUSTERING_FLANN)
-    {
-        if(params.verbose)
-            cout << "Clustering using FLANN with " << params.clustParams.numClusters << " clusters..." << endl;
-        codex.FLANNClustering(trainObject,
-                            params.numClasses,
-                            params.numFeatures,
-                            params.featureLength,
-                            params.clustParams.numClusters,
-                            params.clustParams.branching,
-                            params.clustParams.numPass,
-                            params.clustParams.FLANNmethod,
-                            params.clustParams.cbIndex
-                            );
-    }
+    if(params.optParams.numSteps)
+        optimizeDictionary();
+    else
+        clusterFeatures();
+
     codex.calcCentroid();
 
-    if(params.verbose)
-        cout << "Building the histograms..." << endl;
-
+    cout << "Building the histograms..." << endl;
     for(i = 0; i < params.numClasses; ++i)
     {
         int label = data[i].getLabel();
@@ -375,8 +416,10 @@ void BagOfFeatures::buildBoF()
 
 void BagOfFeatures::train()
 {
-    trainSVM_CV();
-    //if(!trainSVM())
+    if(CLASSIFIER_SVM_CV)
+        trainSVM_CV();
+    else if(CLASSIFIER_SVM)
+        trainSVM();
     //    cout << "Training Failed Because LibSVM is a horrible library..." << endl;
 }
 
@@ -396,6 +439,24 @@ void BagOfFeatures::testDataSet()
         cout << "Test dataset accuracy for class " << label
             << ": " << results << endl;
     }
+}
+
+double BagOfFeatures::testSet(ObjectSet obj, int label)
+{
+    double result;
+    if(CLASSIFIER_SVM)
+    {
+        result = obj.predict(SVMModel, label);
+    }
+    else if(CLASSIFIER_SVM_CV)
+    {
+        result = obj.predict(SVMModel_CV, label);
+    }
+
+    if(params.verbose)
+        cout << "Accuracy for " << label << ": " << result << endl;
+
+    return result;
 }
 
 void BagOfFeatures::processDataSet(DataSet set, int obj)

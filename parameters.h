@@ -54,6 +54,13 @@ struct SVMParameters
     int kFold;
 };
 
+struct OptimizationParameters
+{
+    int clusterRepeat;
+    int clusterStep;
+    int numSteps;
+};
+
 class PreprocessBaseFunction
 {
     public:
@@ -75,6 +82,9 @@ class BoFParameters
 
         //Classifier parameters
         SVMParameters svmParams;
+
+        //For optimization
+        OptimizationParameters optParams;
 
         int numClasses;
         int numImages;
