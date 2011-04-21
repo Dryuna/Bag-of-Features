@@ -211,7 +211,9 @@ void BagOfFeatures::optimizeDictionary()
     }
 
     if(params.verbose)
-        cout << "Best validation results: " << bestAvgAccuracy << endl;
+        cout << "Optimization completed!" << endl
+            << "Best validation optimization results: " << bestAvgAccuracy << endl
+            << "Saving best dictionary..." << endl << endl;
 
     codex = bestCodex;
     params.clustParams.numClusters = codex.size;
@@ -425,19 +427,15 @@ void BagOfFeatures::train()
 
 void BagOfFeatures::testDataSet()
 {
-    double results;
     for(int i = 0; i < params.numClasses; ++i)
     {
         int label = data[i].getLabel();
-        results = trainObject[i].predict(SVMModel_CV, label);
-        cout << "Training dataset accuracy for class " << label
-            << ": " << results << endl;
-        results = validObject[i].predict(SVMModel_CV, label);
-        cout << "Validation dataset accuracy for class " << label
-            << ": " << results << endl;
-        results = testObject[i].predict(SVMModel_CV, label);
-        cout << "Test dataset accuracy for class " << label
-            << ": " << results << endl;
+        cout << "Training set: ";
+        testSet(trainObject[i], label);
+        cout << "Validation set: ";
+        testSet(validObject[i], label);
+        cout << "Test set: ";
+        testSet(testObject[i], label);
     }
 }
 
