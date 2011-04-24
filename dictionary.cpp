@@ -10,7 +10,7 @@ Dictionary::Dictionary()
 {
     dictionary = NULL;
     centroid = NULL;
-    //matcher = NULL;
+    //this->matcher = NULL;
     size = 0;
     length = 0;
 }
@@ -31,7 +31,7 @@ Dictionary::Dictionary(int n, int m)
     }
 
     centroid = new double [length];
-    matcher = NULL;
+    //this->matcher = NULL;
 }
 
 Dictionary::Dictionary(const Dictionary &dict)
@@ -56,6 +56,7 @@ Dictionary::Dictionary(const Dictionary &dict)
     }
 
     matcher = dict.matcher;
+    //this->matcher = dict.matcher;
 }
 
 Dictionary::~Dictionary()
@@ -73,8 +74,8 @@ void Dictionary::dealloc()
     }
     if(centroid != NULL)
         delete [] centroid;
-    if(matcher != NULL)
-        delete matcher;
+    //if(this->matcher != NULL)
+    //    delete this->matcher;
 }
 
 void Dictionary::alloc(int n, int m)
@@ -95,7 +96,7 @@ void Dictionary::alloc(int n, int m)
     }
 
     centroid = new double [length];
-    matcher = NULL;
+    //this->matcher = NULL;
 }
 
 // C-Clustering lib kCluster function
@@ -247,9 +248,18 @@ void Dictionary::FLANNClustering(ObjectSet* obj,
 
     alloc(clustersFound, featureLength);
 
-    cvflann::AutotunedIndexParams matchParams;
+    //Build KNN map
+    //cvflann::KDTreeIndexParams matchParams(12);
+    //cvflann::KMeansIndexParams matchParams;
+    //this->matcher = new cv::flann::Index(featureMat, matchParams);
 
-    matcher = new cv::flann::Index(featureMat, matchParams);
+    vector<cv:: Mat> flannMat(1);
+    flannMat[0] = clusterCenters;
+
+    cout << "Adding features and training FLANN matcher..." << endl;
+    matcher.clear();
+    matcher.add(flannMat);
+    matcher.train();
 
     for(i = 0; i < size; ++i)
     {
@@ -312,20 +322,18 @@ int Dictionary::matchFeature(const double *feature)
 
 int Dictionary::matchFeature(const double *feature)
 {
-    if(matcher != NULL)
-    {
-        std::vector<float> query;
-        std::vector<int> indexes;
-        std::vector<float> distances;
-        cvflann::SearchParams s;
+    //std::vector<float> query(length);
+    vector<cv::DMatch> indexes;
+    cv::Mat query(1, length, CV_32FC1);
+    float* ptr = query.ptr<float>(0);
+    for(int i = 0; i < length; ++i)
+        ptr[i] = feature[i];
 
-        matcher->knnSearch(query, indexes, distances, 16, s);
+    matcher.match(query, indexes);
 
-        //cout << "MinIndex: " << minIndex << endl;
-        return indexes[0];
-    }
-    else
-        return 0;
+    //cout << indexes[0].trainIdx << endl;
+
+    return indexes[0].trainIdx;
 }
 
 
@@ -355,5 +363,36 @@ Dictionary& Dictionary::operator=(const Dictionary &rhs)
         centroid[i] = rhs.centroid[i];
     }
 
+    matcher = rhs.matcher;
+
     return *this;
+}
+
+void Dictionary::save(char* name)
+{
+    char temp[64];
+    strcpy(temp, name);
+    strcat(temp, ".cdx");
+
+    ofstream fout;
+    fout.open(temp);
+    int i, j;
+
+    fout << size << " " << length << endl;
+    for(i = 0; i < size; ++i)
+    {
+        for(j = 0; j < length; ++j)
+        {
+            fout << dictionary[i][j] << " ";
+        }
+        fout << endl;
+    }
+    fout.close();
+
+    strcpy(temp, name);
+    strcat(temp, ".flann");
+    cv::FileStorage storage(temp, cv::FileStorage::WRITE);
+
+    matcher.write(storage);
+
 }

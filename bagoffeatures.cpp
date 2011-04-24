@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 #include "bagoffeatures.h"
 
 extern "C"
@@ -165,7 +166,8 @@ void BagOfFeatures::optimizeDictionary()
     double avgAccuracy;
     double bestAvgAccuracy = 0;
     int label;
-
+    clock_t t1, t2;
+    long double timed;
     i = 0;
 
     cout << "\nOptimizing the dictionary for the Bag of Features..." << endl;
@@ -177,12 +179,18 @@ void BagOfFeatures::optimizeDictionary()
             clusterFeatures();
             if(params.verbose)
                 cout << "Building the histograms of features..." << endl;
+
+            t1 = 0; t2 = 0;
+            t1 = clock();
             for(k = 0; k < params.numClasses; ++k)
             {
                 label = data[k].getLabel();
                 trainObject[k].buildBoFs(codex, label);
                 validObject[k].buildBoFs(codex, label);
             }
+            t2 = clock();
+            timed = (long double)(t2-t1)/(long double)CLOCKS_PER_SEC;
+            cout << "(time: " << timed << ")" << endl;
             //Train the classifier
             train();
 

@@ -151,13 +151,15 @@ class Dictionary
 
         Dictionary& operator=(const Dictionary &rhs);
 
+        void save(char* name);
+        bool load(char* name);
+
         double** dictionary;
         double* centroid;
-        cv::flann::Index *matcher;
+        cv::FlannBasedMatcher matcher;
 
         int size;
         int length;
 };
-
 
 #endif

@@ -44,6 +44,9 @@ class BagOfFeatures
 
         double classifyImage(cv::Mat img);
 
+        void saveModel(char* name);
+        bool loadModel(char* name);
+
     private:
 
         void processDataSet(DataSet set, int obj);
