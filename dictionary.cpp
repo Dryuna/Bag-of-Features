@@ -255,8 +255,6 @@ void Dictionary::FLANNClustering(ObjectSet* obj,
 
     vector<cv:: Mat> flannMat(1);
     flannMat[0] = clusterCenters;
-
-    cout << "Adding features and training FLANN matcher..." << endl;
     matcher.clear();
     matcher.add(flannMat);
     matcher.train();
@@ -372,7 +370,7 @@ void Dictionary::save(char* name)
 {
     char temp[64];
     strcpy(temp, name);
-    strcat(temp, ".cdx");
+    strcat(temp, "_codex");
 
     ofstream fout;
     fout.open(temp);
@@ -389,10 +387,58 @@ void Dictionary::save(char* name)
     }
     fout.close();
 
+/*
     strcpy(temp, name);
-    strcat(temp, ".flann");
-    cv::FileStorage storage(temp, cv::FileStorage::WRITE);
+    strcat(temp, "_flannMatcher");
+    cv::FileStorage storage;
+    storage << temp;
 
     matcher.write(storage);
+*/
+}
 
+bool Dictionary::load(char* name)
+{
+    char temp[64];
+    strcpy(temp, name);
+    strcat(temp, "_codex");
+
+    ifstream fin;
+    fin.open(temp);
+    if(!fin.good())
+        return false;
+    int i, j;
+
+    fin >> size;
+    fin >> length;
+
+    alloc(size, length);
+
+    vector<cv:: Mat> flannMat(1);
+    flannMat[0].create(size, length, CV_32FC1);
+    float* ptr;
+
+    for(i = 0; i < size; ++i)
+    {
+        ptr = flannMat[0].ptr<float>(i);
+        for(j = 0; j < length; ++j)
+        {
+            fin >> dictionary[i][j];
+            ptr[j] = dictionary[i][j];
+        }
+    }
+    fin.close();
+/*
+    strcpy(temp, name);
+    strcat(temp, "_flannMatcher");
+    cv::FileNode storage(temp, cv::FileStorage::READ);
+
+    matcher.read(storage);
+*/
+
+    matcher.clear();
+    matcher.add(flannMat);
+    matcher.train();
+
+    return true;
 }

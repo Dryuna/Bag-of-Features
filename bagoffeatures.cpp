@@ -221,7 +221,7 @@ void BagOfFeatures::optimizeDictionary()
     if(params.verbose)
         cout << "Optimization completed!" << endl
             << "Best validation optimization results: " << bestAvgAccuracy << endl
-            << "Saving best dictionary..." << endl << endl;
+            << "Keeping the best dictionary..." << endl << endl;
 
     codex = bestCodex;
     params.clustParams.numClusters = codex.size;
@@ -516,4 +516,30 @@ void BagOfFeatures::processDataSet(DataSet set, int obj)
     }
 }
 
+void BagOfFeatures::saveModel(char* name)
+{
+    codex.save(name);
+    char temp[64];
+    if(params.classifierType == CLASSIFIER_SVM_CV)
+    {
+        strcpy(temp, name);
+        strcat(temp, "_SVM");
+        SVMModel_CV.save(temp);
+    }
+}
+
+bool BagOfFeatures::loadModel(char* name)
+{
+    char temp[64];
+    if(params.classifierType == CLASSIFIER_SVM_CV)
+    {
+        strcpy(temp, name);
+        strcat(temp, "_SVM");
+        SVMModel_CV.load(temp);
+    }
+    if(codex.load(name))
+        return true;
+    else
+        return false;
+}
 
